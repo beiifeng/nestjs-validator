@@ -1,0 +1,36 @@
+## Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+## Build output
+dist/
+build/
+coverage/
+.cache/
+.turbo/
+
+## Environment files
+.env
+.env.*
+!.env.example
+
+## OS files
+.DS_Store
+Thumbs.db
+
+## Keep VS Code and Zed settings in repo
+.vscode/**
+!.vscode/settings.json
+.zed/**
+!.zed/settings.json
+
+## Ignore other IDE/editor settings
+.idea/
+*.iml
+*.suo
+*.user
+*.userossc
+*.sln.docstates
