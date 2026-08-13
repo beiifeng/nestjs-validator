@@ -21,16 +21,16 @@
   "keywords": [],
   "author": "YiFei Wang <beiifeng@hotmail.com>",
   "license": "MIT",
-  "type": "module",
+  "type": "commonjs",
   "devDependencies": {
-    "@beiifeng/nestjs-validator": "^0.0.1",
+    "@beiifeng/nestjs-validator": "workspace:*",
     "@nestjs/common": "^11.1.28",
     "@nestjs/core": "^11.1.28",
     "reflect-metadata": "^0.2.2",
     "typebox": "^1.3.11"
   },
   "peerDependencies": {
-    "@beiifeng/nestjs-validator": "^0.0.1",
+    "@beiifeng/nestjs-validator": "workspace:*",
     "@nestjs/common": "^11.0.1",
     "@nestjs/core": "^11.0.1",
     "reflect-metadata": "^0.1.12 || ^0.2.0",

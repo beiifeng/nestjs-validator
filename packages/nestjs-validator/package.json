@@ -1,6 +1,6 @@
 {
   "name": "@beiifeng/nestjs-validator",
-  "version": "0.0.1",
+  "version": "0.0.1-beta.1",
   "description": "",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -21,7 +21,7 @@
   "keywords": [],
   "author": "YiFei Wang <beiifeng@hotmail.com>",
   "license": "MIT",
-  "type": "module",
+  "type": "commonjs",
   "devDependencies": {
     "@nestjs/common": "^11.1.28",
     "@nestjs/core": "^11.1.28",

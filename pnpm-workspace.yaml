@@ -1,4 +1,8 @@
 packages:
   - "packages/*"
+  - "examples/*"
+
+allowBuilds:
+  unrs-resolver: set this to true or false
 
 minimumReleaseAge: 4320
