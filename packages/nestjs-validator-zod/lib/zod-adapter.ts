@@ -1,31 +1,28 @@
 import type { IAdapter, IModelZ, IProperty, ModelOptions } from "@beiifeng/nestjs-validator";
 import {
-  ZodArray,
-  ZodCatch,
-  ZodDefault,
-  ZodExactOptional,
-  ZodLazy,
-  ZodNonOptional,
-  ZodNull,
-  ZodNullable,
-  ZodObject,
-  ZodOptional,
-  ZodPrefault,
-  ZodPromise,
-  ZodReadonly,
-  ZodSuccess,
-  ZodType,
-  ZodUndefined,
-  type output as ZodOutput,
+    ZodArray,
+    ZodCatch,
+    ZodDefault,
+    ZodExactOptional,
+    ZodLazy,
+    ZodNonOptional,
+    ZodNull,
+    ZodNullable,
+    ZodObject,
+    ZodOptional,
+    ZodPrefault,
+    ZodPromise,
+    ZodReadonly,
+    ZodSuccess,
+    ZodType,
+    ZodUndefined,
+    type output as ZodOutput,
 } from "zod";
 
 declare module "@beiifeng/nestjs-validator" {
   namespace Validator {
     interface Adapters {
-      Zod: {
-        Schema: ZodType;
-        ModelSchema: ZodObject;
-      };
+      Zod: Validator.Schemas<ZodType, ZodObject>;
     }
   }
 

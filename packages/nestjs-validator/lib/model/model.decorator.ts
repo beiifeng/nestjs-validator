@@ -1,27 +1,9 @@
 import { applyDecorators, type Type } from "@nestjs/common";
-import type { IModelSchema, ISchema } from "../interface";
+import type { IModelSchema, ModelOptions } from "../interface";
 import { getSchemaProperties } from "../validator/helpers";
 import { MODEL_SCHEMA } from "./store";
 
 const definedModels = new Set<string>();
-
-export interface ModelOptions {
-  name?: string;
-  /**
-   * For example, use this to apply `ApiExtraModels` or other decorators to the model class.
-   *
-   * ```js
-   * const options = {
-   *  decorators: [({ givenName, uniqueName }) => givenName !== uniqueName ? ApiExtraModels(uniqueName) : null]
-   * };
-   * ```
-   */
-  decorators?: Array<({ givenName, uniqueName }: { givenName: string; uniqueName: string }) => ClassDecorator | null>;
-  /**
-   * For example, use this to apply `ApiProperty`, `ApiPropertyOptional`, or other decorators to the properties of the model.
-   */
-  propertyProcessor?: (target: object, propertyName: string, propertySchema: ISchema) => void;
-}
 
 export function Model(schema: IModelSchema, options?: ModelOptions): ClassDecorator {
   return (target) => {

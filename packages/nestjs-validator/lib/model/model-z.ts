@@ -1,10 +1,5 @@
-import type { IModelSchema } from "../interface";
+import type { IModelSchema, IModelZ } from "../interface";
 import { parseToPlain } from "../validator/helpers";
-
-export interface IModelZ<T> {
-  new (): T;
-  new (plain: Partial<T>): T;
-}
 
 export function ModelZ(schema: IModelSchema): IModelZ<unknown> {
   class InnerModel {

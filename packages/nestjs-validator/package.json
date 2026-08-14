@@ -18,7 +18,12 @@
     "format": "biome format ./lib/**/*.ts --write",
     "lint": "biome lint ./lib/**/*.ts"
   },
-  "keywords": [],
+  "keywords": [
+    "nestjs",
+    "validation",
+    "zod",
+    "typebox"
+  ],
   "author": "YiFei Wang <beiifeng@hotmail.com>",
   "license": "MIT",
   "type": "commonjs",
