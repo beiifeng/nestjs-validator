@@ -3,20 +3,20 @@
     "TypeScript": {
       "language_servers": ["...", "!tailwindcss-language-server", "!eslint"],
       "formatter": {
-        "language_server": { "name": "biome" },
-      },
+        "language_server": { "name": "biome" }
+      }
     },
     "JavaScript": {
       "language_servers": ["...", "!tailwindcss-language-server", "!eslint"],
       "formatter": {
-        "language_server": { "name": "biome" },
-      },
+        "language_server": { "name": "biome" }
+      }
     },
     "JSON": {
       "language_servers": ["json-language-server", "biome"],
       "formatter": {
-        "language_server": { "name": "biome" },
-      },
-    },
-  },
+        "language_server": { "name": "biome" }
+      }
+    }
+  }
 }
