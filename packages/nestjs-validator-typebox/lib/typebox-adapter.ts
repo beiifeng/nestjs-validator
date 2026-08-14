@@ -33,7 +33,7 @@ declare module "typebox" {
   }
 }
 
-export class TypeBoxAdapter implements IAdapter {
+export class TypeBoxAdapter implements IAdapter<TSchema> {
   name = "TypeBox";
 
   isSchema(schema: TSchema): boolean {
@@ -55,7 +55,7 @@ export class TypeBoxAdapter implements IAdapter {
     return schema;
   }
 
-  native(schema: TSchema): ReturnType<IAdapter["native"]> {
+  native(schema: TSchema): ReturnType<IAdapter<TSchema>["native"]> {
     if (IsNumber(schema) || IsInteger(schema)) {
       return Number;
     }
@@ -81,7 +81,7 @@ export class TypeBoxAdapter implements IAdapter {
     return schema.$id ?? schema;
   }
 
-  getProperties(schema: TSchema): Record<string, IProperty<TSchema>> | null {
+  getProperties(schema: TSchema): ReturnType<IAdapter<TSchema>["getProperties"]> {
     if (!IsObject(schema)) {
       return null;
     }

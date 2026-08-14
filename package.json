@@ -3,6 +3,7 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
+    "gen:id": "node -e \"console.log(`urn:uuid:${crypto.randomUUID()}`)\"",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [

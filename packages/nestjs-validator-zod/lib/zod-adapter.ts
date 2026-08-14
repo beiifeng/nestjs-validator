@@ -48,7 +48,7 @@ function unwrapZod(schema: ZodType): ZodType {
   return current;
 }
 
-export class ZodAdapter implements IAdapter {
+export class ZodAdapter implements IAdapter<ZodType> {
   name = "Zod";
 
   isSchema(schema: ZodType): boolean {
@@ -71,7 +71,7 @@ export class ZodAdapter implements IAdapter {
     return unwrapped;
   }
 
-  native(schema: ZodType): ReturnType<IAdapter["native"]> {
+  native(schema: ZodType): ReturnType<IAdapter<ZodType>["native"]> {
     const unwrapped = unwrapZod(schema);
     switch (unwrapped.def.type) {
       case "string":
@@ -97,7 +97,7 @@ export class ZodAdapter implements IAdapter {
     return schema.meta().$id ?? schema;
   }
 
-  getProperties(schema: ZodObject): Record<string, IProperty<ZodType>> | null {
+  getProperties(schema: ZodType): ReturnType<IAdapter<ZodType>["getProperties"]> {
     const unwrapped = unwrapZod(schema);
     if (!(unwrapped instanceof ZodObject)) {
       return null;

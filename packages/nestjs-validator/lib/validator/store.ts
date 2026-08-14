@@ -1,3 +1,3 @@
-import type { IAdapter } from "../interface";
+import type { IAdapter, ISchema } from "../interface";
 
-export const validatorStore = new Map<string, IAdapter>();
+export const validatorStore = new Map<string, IAdapter<ISchema>>();

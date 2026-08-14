@@ -6,7 +6,7 @@ const $Role = z
     name: z.string().min(1).max(20),
     description: z.string().max(100).optional(),
   })
-  // Execute `node -e "console.log(crypto.randomUUID())"` in terminal to generate a unique UUID for each model.
+  // Execute `node -e "console.log(`urn:uuid:${crypto.randomUUID()}`)"` in terminal to generate a unique UUID for each model.
   .meta({ $id: `urn:uuid:9aee8306-7fb1-41cc-a6e5-5bd829172ea3` });
 
 @Model($Role)
@@ -20,7 +20,7 @@ const $User = z
     email: z.email(),
     roles: z.array($Role).optional(),
   })
-  // Execute `node -e "console.log(crypto.randomUUID())"` in terminal to generate a unique UUID for each model.
+  // Execute `node -e "console.log(`urn:uuid:${crypto.randomUUID()}`)"` in terminal to generate a unique UUID for each model.
   .meta({ $id: `urn:uuid:96a62b19-1bca-4869-b441-8e7a82dcd2cb` });
 
 @Model($User)

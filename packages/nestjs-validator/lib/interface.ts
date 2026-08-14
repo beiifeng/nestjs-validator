@@ -1,30 +1,27 @@
 export namespace Validator {
-  export type Schema = unknown;
-  export type ModelSchema = unknown;
-
   export interface Property<S> {
     name: string;
     schema: S;
     required?: boolean;
   }
 
-  export interface Adapter {
+  export interface Adapter<S> {
     name: string;
 
     /**
      * Check if the schema is a valid schema for this adapter.
      */
-    isSchema(schema: Schema): boolean;
+    isSchema(schema: S): boolean;
 
     /**
      * Check if the schema represents a null value.
      */
-    isNull(schema: Schema): boolean;
+    isNull(schema: S): boolean;
 
     /**
      * Check if the schema represents an undefined value.
      */
-    isUndefined(schema: Schema): boolean;
+    isUndefined(schema: S): boolean;
 
     /**
      * Unwrap the schema to get the underlying type.
@@ -38,7 +35,7 @@ export namespace Validator {
      * unwrap(z.object({ name: z.string() })); // returns z.object({ name: z.string() })
      * ```
      */
-    unwrap(schema: Schema): Schema;
+    unwrap(schema: S): S;
 
     /**
      * Get the native JavaScript type that corresponds to the schema.
@@ -64,7 +61,7 @@ export namespace Validator {
      * ```
      */
     native(
-      schema: Schema,
+      schema: S,
     ):
       | StringConstructor
       | NumberConstructor
@@ -81,7 +78,7 @@ export namespace Validator {
      * It can be a string, number, or any other value that uniquely identifies the schema.
      * Suggested identifiers should be stable.
      */
-    getIdentifier(schema: Schema): unknown | null;
+    getIdentifier(schema: S): unknown | null;
 
     /**
      * Get the properties of a model schema.
@@ -89,18 +86,18 @@ export namespace Validator {
      * This method returns a record of property names to their corresponding Property definitions.
      * If the schema does not represent a model, it returns null.
      */
-    getProperties(schema: Schema): Record<string, Property<Schema> | null>;
+    getProperties(schema: S): Record<string, Property<S> | null>;
 
     /**
      * Parse a plain object into a value that matches the schema.
      * This is useful for converting data from external sources (like JSON) into the expected types defined by the schema.
      */
-    parse(schema: Schema, plain: unknown): unknown;
+    parse(schema: S, plain: unknown): unknown;
 
     /**
      * Check if a value matches the schema.
      */
-    check(schema: Schema, value: unknown): boolean;
+    check(schema: S, value: unknown): boolean;
   }
 
   export interface ModelZ<T> {
@@ -108,7 +105,7 @@ export namespace Validator {
     new (plain: Partial<T>): T;
   }
 
-  export interface ModelOptions<S> {
+  export interface ModelOption<S> {
     name?: string;
     /**
      * For example, use this to apply `ApiExtraModels` or other decorators to the model class.
@@ -127,9 +124,9 @@ export namespace Validator {
   }
 }
 
-export type ISchema = Validator.Schema;
-export type IModelSchema = Validator.ModelSchema;
+export type ISchema = unknown;
+export type IModelSchema = unknown;
 export type IProperty<S> = Validator.Property<S>;
-export type IAdapter = Validator.Adapter;
+export type IAdapter<S> = Validator.Adapter<S>;
 export type IModelZ<T> = Validator.ModelZ<T>;
-export type ModelOptions<S> = Validator.ModelOptions<S>;
+export type ModelOption<S> = Validator.ModelOption<S>;

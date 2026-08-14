@@ -1,11 +1,11 @@
 import { applyDecorators, type Type } from "@nestjs/common";
-import type { ISchema, ModelOptions } from "../interface";
+import type { IModelSchema, ISchema, ModelOption } from "../interface";
 import { getSchemaProperties } from "../validator/helpers";
 import { MODEL_SCHEMA } from "./store";
 
 const definedModels = new Set<string>();
 
-export function Model<S extends ISchema, M extends S>(schema: M, options?: ModelOptions<S>): ClassDecorator {
+export function Model(schema: IModelSchema, options?: ModelOption<ISchema>): ClassDecorator {
   return (target) => {
     const name = options?.name || target.name;
     const decorators = options?.decorators || [];
@@ -16,7 +16,7 @@ export function Model<S extends ISchema, M extends S>(schema: M, options?: Model
       if (properties) {
         for (const propertyName in properties) {
           const property = properties[propertyName];
-          options.propertyProcessor(target.prototype, propertyName, property.schema as S);
+          options.propertyProcessor(target.prototype, propertyName, property.schema);
         }
       }
     }
