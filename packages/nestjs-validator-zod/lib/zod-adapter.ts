@@ -1,34 +1,31 @@
 import type { IAdapter, IModelZ, IProperty, ModelOptions } from "@beiifeng/nestjs-validator";
 import {
-    ZodArray,
-    ZodCatch,
-    ZodDefault,
-    ZodExactOptional,
-    ZodLazy,
-    ZodNonOptional,
-    ZodNull,
-    ZodNullable,
-    ZodObject,
-    ZodOptional,
-    ZodPrefault,
-    ZodPromise,
-    ZodReadonly,
-    ZodSuccess,
-    ZodType,
-    ZodUndefined,
-    type output as ZodOutput,
+  ZodArray,
+  ZodCatch,
+  ZodDefault,
+  ZodExactOptional,
+  ZodLazy,
+  ZodNonOptional,
+  ZodNull,
+  ZodNullable,
+  ZodObject,
+  ZodOptional,
+  ZodPrefault,
+  ZodPromise,
+  ZodReadonly,
+  ZodSuccess,
+  ZodType,
+  ZodUndefined,
+  type output as ZodOutput,
 } from "zod";
 
 declare module "@beiifeng/nestjs-validator" {
-  namespace Validator {
-    interface Adapters {
-      Zod: Validator.Schemas<ZodType, ZodObject>;
-    }
-  }
-
   export function ModelZ<T extends Record<string, ZodType>>(schema: ZodObject<T>): IModelZ<ZodOutput<typeof schema>>;
   export function Model<T extends Record<string, ZodType>>(schema: ZodObject<T>): ClassDecorator;
-  export function Model<T extends Record<string, ZodType>>(schema: ZodObject<T>, options: ModelOptions): ClassDecorator;
+  export function Model<T extends Record<string, ZodType>>(
+    schema: ZodObject<T>,
+    options: ModelOptions<ZodType>,
+  ): ClassDecorator;
 }
 
 function unwrapZod(schema: ZodType): ZodType {
@@ -59,15 +56,15 @@ export class ZodAdapter implements IAdapter {
   }
 
   isNull(schema: ZodType): boolean {
-    return unwrapZod(schema as ZodType) instanceof ZodNull;
+    return unwrapZod(schema) instanceof ZodNull;
   }
 
   isUndefined(schema: ZodType): boolean {
-    return unwrapZod(schema as ZodType) instanceof ZodUndefined;
+    return unwrapZod(schema) instanceof ZodUndefined;
   }
 
   unwrap(schema: ZodType): ZodType {
-    const unwrapped = unwrapZod(schema as ZodType);
+    const unwrapped = unwrapZod(schema);
     if (unwrapped instanceof ZodArray) {
       return unwrapped.unwrap() as ZodType;
     }
@@ -75,7 +72,7 @@ export class ZodAdapter implements IAdapter {
   }
 
   native(schema: ZodType): ReturnType<IAdapter["native"]> {
-    const unwrapped = unwrapZod(schema as ZodType);
+    const unwrapped = unwrapZod(schema);
     switch (unwrapped.def.type) {
       case "string":
         return String;
@@ -100,13 +97,13 @@ export class ZodAdapter implements IAdapter {
     return schema.meta().$id ?? schema;
   }
 
-  getProperties(schema: ZodType): Record<string, IProperty> | null {
+  getProperties(schema: ZodObject): Record<string, IProperty<ZodType>> | null {
     const unwrapped = unwrapZod(schema);
     if (!(unwrapped instanceof ZodObject)) {
       return null;
     }
 
-    const properties: Record<string, IProperty> = {};
+    const properties: Record<string, IProperty<ZodType>> = {};
     for (const name in unwrapped.shape) {
       if (!Object.hasOwn(unwrapped.shape, name)) {
         continue;

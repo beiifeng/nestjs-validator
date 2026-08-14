@@ -1,7 +1,7 @@
-import type { IAdapter, IModelSchema, ISchema } from "../interface";
+import type { IAdapter, ISchema, IProperty } from "../interface";
 import { validatorStore } from "./store";
 
-const schemaToAdapterCache = new WeakMap<ISchema, IAdapter>();
+const schemaToAdapterCache = new Map<ISchema, IAdapter>();
 export function getValidator(schema: ISchema): IAdapter {
   const cachedAdapter = schemaToAdapterCache.get(schema);
   if (cachedAdapter) {
@@ -28,7 +28,7 @@ export function getSchemaIdentifier(schema: ISchema): ReturnType<IAdapter["getId
   return getValidator(schema).getIdentifier(schema);
 }
 
-export function getSchemaProperties(schema: IModelSchema): ReturnType<IAdapter["getProperties"]> {
+export function getSchemaProperties(schema: ISchema): Record<string, IProperty<ISchema> | null> {
   return getValidator(schema).getProperties(schema);
 }
 

@@ -1,7 +1,7 @@
 import type { IModelSchema, IModelZ } from "../interface";
 import { parseToPlain } from "../validator/helpers";
 
-export function ModelZ(schema: IModelSchema): IModelZ<unknown> {
+export function ModelZ<M extends IModelSchema>(schema: M): IModelZ<unknown> {
   class InnerModel {
     constructor(plain?: Record<string, unknown>) {
       if (plain) {

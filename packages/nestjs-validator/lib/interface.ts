@@ -1,29 +1,10 @@
 export namespace Validator {
-  export interface Schemas<S extends object, M extends S> {
-    /**
-     * The generic type definition.
-     *
-     * Example: For Zod, this would be a `ZodType`; for TypeBox, this would be a `TSchema`.
-     */
-    Schema: S;
-    /**
-     * The model type definition.
-     *
-     * Example: For Zod, this would be a `ZodObject`; for TypeBox, this would be a `TObject`.
-     */
-    ModelSchema: M;
-  }
+  export type Schema = unknown;
+  export type ModelSchema = unknown;
 
-  export interface Adapters {
-    [name: string]: Schemas<object, object>;
-  }
-
-  export type Schema = Adapters[keyof Adapters]["Schema"];
-  export type ModelSchema = Adapters[keyof Adapters]["ModelSchema"];
-
-  export interface Property {
+  export interface Property<S> {
     name: string;
-    schema: Schema;
+    schema: S;
     required?: boolean;
   }
 
@@ -108,7 +89,7 @@ export namespace Validator {
      * This method returns a record of property names to their corresponding Property definitions.
      * If the schema does not represent a model, it returns null.
      */
-    getProperties(schema: ModelSchema): Record<string, Property> | null;
+    getProperties(schema: Schema): Record<string, Property<Schema> | null>;
 
     /**
      * Parse a plain object into a value that matches the schema.
@@ -127,7 +108,7 @@ export namespace Validator {
     new (plain: Partial<T>): T;
   }
 
-  export interface ModelOptions {
+  export interface ModelOptions<S> {
     name?: string;
     /**
      * For example, use this to apply `ApiExtraModels` or other decorators to the model class.
@@ -142,13 +123,13 @@ export namespace Validator {
     /**
      * For example, use this to apply `ApiProperty`, `ApiPropertyOptional`, or other decorators to the properties of the model.
      */
-    propertyProcessor?: (target: object, propertyName: string, propertySchema: ISchema) => void;
+    propertyProcessor?: (target: object, propertyName: string, propertySchema: S) => void;
   }
 }
 
 export type ISchema = Validator.Schema;
 export type IModelSchema = Validator.ModelSchema;
-export type IProperty = Validator.Property;
+export type IProperty<S> = Validator.Property<S>;
 export type IAdapter = Validator.Adapter;
 export type IModelZ<T> = Validator.ModelZ<T>;
-export type ModelOptions = Validator.ModelOptions;
+export type ModelOptions<S> = Validator.ModelOptions<S>;

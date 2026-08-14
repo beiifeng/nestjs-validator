@@ -18,15 +18,9 @@ import {
 import Schema from "typebox/schema";
 
 declare module "@beiifeng/nestjs-validator" {
-  namespace Validator {
-    interface Adapters {
-      TypeBox: Validator.Schemas<TSchema, TObject>;
-    }
-  }
-
   export function ModelZ<T extends TProperties>(schema: TObject<T>): IModelZ<Static<typeof schema>>;
   export function Model<T extends TProperties>(schema: TObject<T>): ClassDecorator;
-  export function Model<T extends TProperties>(schema: TObject<T>, options: ModelOptions): ClassDecorator;
+  export function Model<T extends TProperties>(schema: TObject<T>, options: ModelOptions<TSchema>): ClassDecorator;
 }
 
 declare module "typebox" {
@@ -87,12 +81,12 @@ export class TypeBoxAdapter implements IAdapter {
     return schema.$id ?? schema;
   }
 
-  getProperties(schema: TSchema): Record<string, IProperty> | null {
+  getProperties(schema: TSchema): Record<string, IProperty<TSchema>> | null {
     if (!IsObject(schema)) {
       return null;
     }
 
-    const properties: Record<string, IProperty> = {};
+    const properties: Record<string, IProperty<TSchema>> = {};
     Object.entries(schema.properties).forEach(([key, value]) => {
       properties[key] = {
         name: key,
