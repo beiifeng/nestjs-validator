@@ -1,8 +1,8 @@
-import { NestFactory } from "@nestjs/core";
-import { validatorRegistry } from "@beiifeng/nestjs-validator";
+import { validator } from "@beiifeng/nestjs-validator";
 import { ZodAdapter } from "@beiifeng/nestjs-validator-zod";
-validatorRegistry.register("Zod", new ZodAdapter());
+validator.register("Zod", new ZodAdapter());
 
+import { NestFactory } from "@nestjs/core";
 import { AppModule } from "./app.module";
 
 async function bootstrap() {

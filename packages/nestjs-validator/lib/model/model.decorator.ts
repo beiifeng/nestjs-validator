@@ -1,6 +1,5 @@
 import { applyDecorators, type Type } from "@nestjs/common";
-import type { TObject, TProperties, TSchema } from "typebox";
-import type { ZodObject, ZodType } from "zod";
+import type { IModelSchema, ISchema } from "../interface";
 import { getSchemaProperties } from "../validator/helpers";
 import { MODEL_SCHEMA } from "./store";
 
@@ -21,15 +20,10 @@ export interface ModelOptions {
   /**
    * For example, use this to apply `ApiProperty`, `ApiPropertyOptional`, or other decorators to the properties of the model.
    */
-  propertyProcessor?: (target: object, propertyName: string, propertySchema: ZodType | TSchema) => void;
+  propertyProcessor?: (target: object, propertyName: string, propertySchema: ISchema) => void;
 }
 
-export function Model<T extends Record<string, ZodType>>(schema: ZodObject<T>): ClassDecorator;
-export function Model<T extends Record<string, ZodType>>(schema: ZodObject<T>, options: ModelOptions): ClassDecorator;
-export function Model<T extends TProperties>(schema: TObject<T>): ClassDecorator;
-export function Model<T extends TProperties>(schema: TObject<T>, options: ModelOptions): ClassDecorator;
-
-export function Model(schema: ZodObject | TObject, options?: ModelOptions): ClassDecorator {
+export function Model(schema: IModelSchema, options?: ModelOptions): ClassDecorator {
   return (target) => {
     const name = options?.name || target.name;
     const decorators = options?.decorators || [];

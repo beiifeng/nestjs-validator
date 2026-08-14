@@ -24,9 +24,7 @@
   "type": "commonjs",
   "devDependencies": {
     "@nestjs/common": "^11.1.28",
-    "@nestjs/core": "^11.1.28",
-    "typebox": "^1.3.11",
-    "zod": "^4.4.3"
+    "@nestjs/core": "^11.1.28"
   },
   "peerDependencies": {
     "@nestjs/common": "^11.0.1",

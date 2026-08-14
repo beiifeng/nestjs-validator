@@ -1,5 +1,4 @@
-import type { Static, TObject, TProperties } from "typebox";
-import type { ZodObject, output as ZodOutput, ZodType } from "zod";
+import type { IModelSchema } from "../interface";
 import { parseToPlain } from "../validator/helpers";
 
 export interface ModelZ<T> {
@@ -7,9 +6,7 @@ export interface ModelZ<T> {
   new (plain: Partial<T>): T;
 }
 
-export function ModelZ<T extends Record<string, ZodType>>(schema: ZodObject<T>): ModelZ<ZodOutput<typeof schema>>;
-export function ModelZ<T extends TProperties>(schema: TObject<T>): ModelZ<Static<typeof schema>>;
-export function ModelZ(schema: ZodObject | TObject) {
+export function ModelZ(schema: IModelSchema): ModelZ<unknown> {
   class InnerModel {
     constructor(plain?: Record<string, unknown>) {
       if (plain) {

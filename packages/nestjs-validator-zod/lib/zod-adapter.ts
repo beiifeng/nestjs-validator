@@ -1,4 +1,4 @@
-import type { IAdapter, IProperty } from "@beiifeng/nestjs-validator";
+import type { IAdapter, IProperty, ModelOptions } from "@beiifeng/nestjs-validator";
 import {
   ZodArray,
   ZodCatch,
@@ -16,6 +16,7 @@ import {
   ZodSuccess,
   ZodType,
   ZodUndefined,
+  type output as ZodOutput,
 } from "zod";
 
 declare module "@beiifeng/nestjs-validator" {
@@ -27,6 +28,10 @@ declare module "@beiifeng/nestjs-validator" {
       };
     }
   }
+
+  export function ModelZ<T extends Record<string, ZodType>>(schema: ZodObject<T>): ModelZ<ZodOutput<typeof schema>>;
+  export function Model<T extends Record<string, ZodType>>(schema: ZodObject<T>): ClassDecorator;
+  export function Model<T extends Record<string, ZodType>>(schema: ZodObject<T>, options: ModelOptions): ClassDecorator;
 }
 
 function unwrapZod(schema: ZodType): ZodType {
