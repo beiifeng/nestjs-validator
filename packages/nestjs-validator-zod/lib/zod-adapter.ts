@@ -72,25 +72,24 @@ export class ZodAdapter implements ValidatorAdapter {
     | ObjectConstructor
     | null {
     const unwrapped = unwrapSchema(schema as ZodType);
-    if (unwrapped instanceof ZodNumber) {
-      return Number;
+    switch (unwrapped.def.type) {
+      case "string":
+        return String;
+      case "number":
+      case "int":
+        return Number;
+      case "boolean":
+        return Boolean;
+      case "date":
+        return Date;
+      case "array":
+        return Array;
+      case "object":
+      case "record":
+        return Object;
+      default:
+        return null;
     }
-    if (unwrapped instanceof ZodBoolean) {
-      return Boolean;
-    }
-    if (unwrapped instanceof ZodDate) {
-      return Date;
-    }
-    if (unwrapped instanceof ZodString) {
-      return String;
-    }
-    if (unwrapped instanceof ZodArray) {
-      return Array;
-    }
-    if (unwrapped instanceof ZodObject) {
-      return Object;
-    }
-    return null;
   }
 
   unwrap(schema: unknown): ZodType {

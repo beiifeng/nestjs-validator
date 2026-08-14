@@ -1,7 +1,7 @@
 import { BadRequestException, Logger, type ArgumentMetadata, type PipeTransform, type Type } from "@nestjs/common";
 import type { IModelSchema, ISchema } from "../interface";
 import { MODEL_SCHEMA } from "../model/store";
-import { checkValue, getSchemaProperties, unwrapSchema } from "../validator/helpers";
+import { checkValue, getSchemaProperties, parseToPlain, unwrapSchema } from "../validator/helpers";
 
 export interface Bind<T = unknown, R = unknown> extends PipeTransform<T, R> {
   (schema: ISchema): PipeTransform<T, R>;
@@ -61,10 +61,10 @@ function plainToInstance(value: unknown, metaType: Type | null, schema: ISchema 
   }
 
   let realMetaType: Type = metaType as Type;
-  if (metaType === null || metaType === undefined) {
+  if (!realMetaType) {
     realMetaType = MODEL_SCHEMA.getModel(schema);
   }
-  if (realMetaType === null || realMetaType === undefined) {
+  if (!realMetaType && !schema) {
     logger.warn(`The type for variable '${path}' must exist, otherwise the value will return 'undefined'.`);
     return undefined;
   }
@@ -112,7 +112,7 @@ function plainToInstance(value: unknown, metaType: Type | null, schema: ISchema 
     return undefined;
   }
   // For duplicate binding case.
-  if (value instanceof realMetaType) {
+  if (realMetaType && value instanceof realMetaType) {
     return value;
   }
   return createInstance(value, realMetaType, schema, path);
@@ -124,6 +124,9 @@ function createInstance<T extends object>(
   schema: ISchema | undefined,
   path: string,
 ): T {
+  if (!metaType) {
+    return parseToPlain(schema as ISchema, value) as T;
+  }
   const instance = new metaType() as T;
   if (!schema) {
     return instance;
