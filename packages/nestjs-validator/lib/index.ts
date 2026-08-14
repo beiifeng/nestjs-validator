@@ -1,10 +1,5 @@
-import "reflect-metadata";
-
-export type { IModelSchema, IProperty, ISchema } from "./interface";
-
-export { validatorRegistry } from "./validator";
-export type { ValidatorAdapter } from "./validator";
+export { IAdapter, IProperty, Validator } from "./interface";
 
 export { Model, ModelZ } from "./model";
-
 export { Bind } from "./pipe";
+export { validator } from "./validator";

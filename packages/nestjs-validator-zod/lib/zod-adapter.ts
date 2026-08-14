@@ -1,28 +1,35 @@
-import type { IProperty, ValidatorAdapter } from "@beiifeng/nestjs-validator";
+import type { IAdapter, IProperty } from "@beiifeng/nestjs-validator";
 import {
   ZodArray,
-  ZodBoolean,
   ZodCatch,
-  ZodDate,
   ZodDefault,
   ZodExactOptional,
   ZodLazy,
   ZodNonOptional,
   ZodNull,
   ZodNullable,
-  ZodNumber,
   ZodObject,
   ZodOptional,
   ZodPrefault,
   ZodPromise,
   ZodReadonly,
-  ZodString,
   ZodSuccess,
   ZodType,
   ZodUndefined,
 } from "zod";
 
-function unwrapSchema(schema: ZodType): ZodType {
+declare module "@beiifeng/nestjs-validator" {
+  namespace Validator {
+    interface Adapters {
+      Zod: {
+        Schema: ZodType;
+        ModelSchema: ZodObject;
+      };
+    }
+  }
+}
+
+function unwrapZod(schema: ZodType): ZodType {
   let current = schema;
   while (
     current instanceof ZodOptional ||
@@ -42,36 +49,31 @@ function unwrapSchema(schema: ZodType): ZodType {
   return current;
 }
 
-export class ZodAdapter implements ValidatorAdapter {
+export class ZodAdapter implements IAdapter {
   name = "Zod";
 
   isSchema(schema: ZodType): boolean {
     return schema instanceof ZodType;
   }
 
-  isNull(schema: unknown): boolean {
-    return unwrapSchema(schema as ZodType) instanceof ZodNull;
+  isNull(schema: ZodType): boolean {
+    return unwrapZod(schema as ZodType) instanceof ZodNull;
   }
 
-  isUndefined(schema: unknown): boolean {
-    return unwrapSchema(schema as ZodType) instanceof ZodUndefined;
+  isUndefined(schema: ZodType): boolean {
+    return unwrapZod(schema as ZodType) instanceof ZodUndefined;
   }
 
-  isArray(schema: unknown): boolean {
-    return unwrapSchema(schema as ZodType) instanceof ZodArray;
+  unwrap(schema: ZodType): ZodType {
+    const unwrapped = unwrapZod(schema as ZodType);
+    if (unwrapped instanceof ZodArray) {
+      return unwrapped.unwrap() as ZodType;
+    }
+    return unwrapped;
   }
 
-  nativeType(
-    schema: unknown,
-  ):
-    | StringConstructor
-    | NumberConstructor
-    | BooleanConstructor
-    | DateConstructor
-    | ArrayConstructor
-    | ObjectConstructor
-    | null {
-    const unwrapped = unwrapSchema(schema as ZodType);
+  native(schema: ZodType): ReturnType<IAdapter["native"]> {
+    const unwrapped = unwrapZod(schema as ZodType);
     switch (unwrapped.def.type) {
       case "string":
         return String;
@@ -92,20 +94,12 @@ export class ZodAdapter implements ValidatorAdapter {
     }
   }
 
-  unwrap(schema: unknown): ZodType {
-    const unwrapped = unwrapSchema(schema as ZodType);
-    if (unwrapped instanceof ZodArray) {
-      return unwrapped.unwrap() as ZodType;
-    }
-    return unwrapped;
-  }
-
   getIdentifier(schema: ZodType): unknown | null {
     return schema.meta().$id ?? schema;
   }
 
-  getProperties(schema: unknown): Record<string, IProperty> | null {
-    const unwrapped = unwrapSchema(schema as ZodType);
+  getProperties(schema: ZodType): Record<string, IProperty> | null {
+    const unwrapped = unwrapZod(schema);
     if (!(unwrapped instanceof ZodObject)) {
       return null;
     }
@@ -122,11 +116,11 @@ export class ZodAdapter implements ValidatorAdapter {
     return properties;
   }
 
-  parse(schema: unknown, plain: unknown): unknown {
-    return (schema as ZodType).parse(plain);
+  parse(schema: ZodType, plain: unknown): unknown {
+    return schema.parse(plain);
   }
 
-  check(schema: unknown, value: unknown): boolean {
-    return (schema as ZodType).safeParse(value).success;
+  check(schema: ZodType, value: unknown): boolean {
+    return schema.safeParse(value).success;
   }
 }

@@ -1,2 +1,1 @@
-export type { ValidatorAdapter } from "./adapter";
-export { validatorRegistry } from "./registry";
+export { validator } from "./registry";
