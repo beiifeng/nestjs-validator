@@ -1,12 +1,12 @@
 import type { IModelSchema } from "../interface";
 import { parseToPlain } from "../validator/helpers";
 
-export interface ModelZ<T> {
+export interface IModelZ<T> {
   new (): T;
   new (plain: Partial<T>): T;
 }
 
-export function ModelZ(schema: IModelSchema): ModelZ<unknown> {
+export function ModelZ(schema: IModelSchema): IModelZ<unknown> {
   class InnerModel {
     constructor(plain?: Record<string, unknown>) {
       if (plain) {
@@ -18,5 +18,5 @@ export function ModelZ(schema: IModelSchema): ModelZ<unknown> {
       Object.assign(this, plain);
     }
   }
-  return InnerModel as ModelZ<unknown>;
+  return InnerModel as IModelZ<unknown>;
 }
