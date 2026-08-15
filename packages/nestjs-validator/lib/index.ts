@@ -1,4 +1,4 @@
-export { IAdapter, IModelZ, IProperty, ModelOption as ModelOptions, Validator } from "./interface";
+export { IAdapter, IModelZ, IProperty, ModelOption, Validator } from "./interface";
 
 export { Model, ModelZ } from "./model";
 export { Bind } from "./pipe";

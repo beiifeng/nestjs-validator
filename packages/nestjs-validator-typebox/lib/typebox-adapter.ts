@@ -1,4 +1,4 @@
-import type { IAdapter, IModelZ, IProperty, ModelOptions } from "@beiifeng/nestjs-validator";
+import type { IAdapter, IModelZ, IProperty, ModelOption } from "@beiifeng/nestjs-validator";
 import {
   IsArray,
   IsBoolean,
@@ -20,7 +20,7 @@ import Schema from "typebox/schema";
 declare module "@beiifeng/nestjs-validator" {
   export function ModelZ<T extends TProperties>(schema: TObject<T>): IModelZ<Static<typeof schema>>;
   export function Model<T extends TProperties>(schema: TObject<T>): ClassDecorator;
-  export function Model<T extends TProperties>(schema: TObject<T>, options: ModelOptions<TSchema>): ClassDecorator;
+  export function Model<T extends TProperties>(schema: TObject<T>, options: ModelOption<TSchema>): ClassDecorator;
 }
 
 declare module "typebox" {
