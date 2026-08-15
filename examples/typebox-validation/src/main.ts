@@ -1,6 +1,6 @@
 import { validator } from "@beiifeng/nestjs-validator";
 import { TypeBoxAdapter } from "@beiifeng/nestjs-validator-typebox";
-validator.register("TypeBox", new TypeBoxAdapter());
+validator.addAdapter(new TypeBoxAdapter());
 
 import { NestFactory } from "@nestjs/core";
 import { AppModule } from "./app.module";

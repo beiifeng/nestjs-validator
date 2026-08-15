@@ -1,4 +1,12 @@
-export { HookType, IAdapter, IHook, IHookCtx, IModelZ, IProperty, ModelOptions } from "./interface";
+export {
+  IAdapter,
+  IModelZ,
+  IPlugin,
+  IPluginCtx,
+  IProperty,
+  ModelOptions,
+  PluginType,
+} from "./interface";
 
 export { Model, ModelZ } from "./model";
 export { Bind } from "./pipe";

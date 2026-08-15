@@ -1,7 +1,7 @@
-import type { HookType, IAdapter, IHook, IHookCtx, ISchema } from "../interface";
+import type { IAdapter, IPlugin, IPluginCtx, ISchema, PluginType } from "../interface";
 
-export class ResolveModelNamePlugin implements IHook {
-  readonly type = "doModel" as const satisfies HookType;
+export class ResolveModelNamePlugin implements IPlugin {
+  readonly type = "doModel" as const satisfies PluginType;
   readonly name = "ResolveModelNamePlugin";
 
   #definedModels: Set<string>;
@@ -10,7 +10,7 @@ export class ResolveModelNamePlugin implements IHook {
     this.#definedModels = new Set<string>();
     this.#splitter = "_";
   }
-  async apply<S extends ISchema>(_adapter: IAdapter<S>, _schema: S, ctx: IHookCtx): Promise<IHookCtx> {
+  async apply(_adapter: IAdapter<ISchema>, _schema: ISchema, ctx: IPluginCtx): Promise<IPluginCtx> {
     let { targetName } = ctx;
     let count = 1;
     if (this.#definedModels.has(targetName)) {

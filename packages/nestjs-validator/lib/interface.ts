@@ -121,25 +121,25 @@ export interface ModelOptions<S> {
   propertyProcessor?: (target: object, name: string, schema: S) => void;
 }
 
-export type HookType = "onModel" | "doModel" | "onModelZ";
-export interface IHookCtx {
+export type PluginType = "onModel" | "doModel" | "onModelZ";
+export interface IPluginCtx {
   target: FunctionConstructor;
   name: string;
   targetName: string;
 }
-export interface IHook {
-  readonly type: HookType;
+export interface IPlugin {
+  readonly type: PluginType;
   readonly name: string;
   apply: (
     adapter: IAdapter<ISchema>,
     schema: IModelSchema,
     /** Only applicable for "doModel" hooks */
-    ctx: IHookCtx,
+    ctx: IPluginCtx,
   ) =>
     | void
     | Promise<void>
     /** Only applicable for "doModel" hooks */
-    | Promise<IHookCtx>
+    | Promise<IPluginCtx>
     /** Only applicable for "doModel" hooks */
-    | IHookCtx;
+    | IPluginCtx;
 }

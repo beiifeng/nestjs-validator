@@ -1,6 +1,6 @@
 import { validator } from "@beiifeng/nestjs-validator";
 import { ZodAdapter } from "@beiifeng/nestjs-validator-zod";
-validator.register("Zod", new ZodAdapter());
+validator.addAdapter(new ZodAdapter());
 
 import { NestFactory } from "@nestjs/core";
 import { AppModule } from "./app.module";
