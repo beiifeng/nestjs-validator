@@ -5,7 +5,4 @@ export const validator = {
   register: (name: string, adapter: IAdapter<ISchema>): void => {
     validatorStore.set(name, adapter);
   },
-  unregister: (name: string): void => {
-    validatorStore.delete(name);
-  },
 };

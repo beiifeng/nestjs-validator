@@ -103,7 +103,7 @@ export interface IModelZ<T> {
   new (): T;
   new (plain: Partial<T>): T;
 }
-export interface ModelOption<S> {
+export interface ModelOptions<S> {
   name?: string;
   /**
    * For example, use this to apply `ApiExtraModels` or other decorators to the model class.
@@ -119,4 +119,27 @@ export interface ModelOption<S> {
    * For example, use this to apply `ApiProperty`, `ApiPropertyOptional`, or other decorators to the properties of the model.
    */
   propertyProcessor?: (target: object, name: string, schema: S) => void;
+}
+
+export type HookType = "onModel" | "doModel" | "onModelZ";
+export interface IHookCtx {
+  target: FunctionConstructor;
+  name: string;
+  targetName: string;
+}
+export interface IHook {
+  readonly type: HookType;
+  readonly name: string;
+  apply: (
+    adapter: IAdapter<ISchema>,
+    schema: IModelSchema,
+    /** Only applicable for "doModel" hooks */
+    ctx: IHookCtx,
+  ) =>
+    | void
+    | Promise<void>
+    /** Only applicable for "doModel" hooks */
+    | Promise<IHookCtx>
+    /** Only applicable for "doModel" hooks */
+    | IHookCtx;
 }
