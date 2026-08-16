@@ -1,13 +1,13 @@
 import type { IAdapter, IProperty, ISchema } from "../interface";
-import { validatorStore } from "./store";
+import { validators } from "./store";
 
 const schemaToAdapterCache = new Map<ISchema, IAdapter<ISchema>>();
-export function getValidator(schema: ISchema): IAdapter<ISchema> {
+export function getAdapter(schema: ISchema): IAdapter<ISchema> {
   const cachedAdapter = schemaToAdapterCache.get(schema);
   if (cachedAdapter) {
     return cachedAdapter;
   }
-  for (const adapter of validatorStore.values()) {
+  for (const adapter of validators.values()) {
     if (adapter.isSchema(schema)) {
       schemaToAdapterCache.set(schema, adapter);
       return adapter;
@@ -17,33 +17,33 @@ export function getValidator(schema: ISchema): IAdapter<ISchema> {
 }
 
 export function parseToPlain(schema: ISchema, plain: unknown): ReturnType<IAdapter<ISchema>["parse"]> {
-  return getValidator(schema).parse(schema, plain);
+  return getAdapter(schema).parse(schema, plain);
 }
 
 export function checkValue(schema: ISchema, value: unknown): ReturnType<IAdapter<ISchema>["check"]> {
-  return getValidator(schema).check(schema, value);
+  return getAdapter(schema).check(schema, value);
 }
 
 export function getSchemaIdentifier(schema: ISchema): ReturnType<IAdapter<ISchema>["getIdentifier"]> {
-  return getValidator(schema).getIdentifier(schema);
+  return getAdapter(schema).getIdentifier(schema);
 }
 
 export function getSchemaProperties(schema: ISchema): Record<string, IProperty<ISchema> | null> {
-  return getValidator(schema).getProperties(schema);
+  return getAdapter(schema).getProperties(schema);
 }
 
 export function getNativeType(schema: ISchema): ReturnType<IAdapter<ISchema>["native"]> {
-  return getValidator(schema).native(schema);
+  return getAdapter(schema).native(schema);
 }
 
 export function isNullSchema(schema: ISchema): ReturnType<IAdapter<ISchema>["isNull"]> {
-  return getValidator(schema).isNull(schema);
+  return getAdapter(schema).isNull(schema);
 }
 
 export function isUndefinedSchema(schema: ISchema): ReturnType<IAdapter<ISchema>["isUndefined"]> {
-  return getValidator(schema).isUndefined(schema);
+  return getAdapter(schema).isUndefined(schema);
 }
 
 export function unwrapSchema(schema: ISchema): ReturnType<IAdapter<ISchema>["unwrap"]> {
-  return getValidator(schema).unwrap(schema);
+  return getAdapter(schema).unwrap(schema);
 }

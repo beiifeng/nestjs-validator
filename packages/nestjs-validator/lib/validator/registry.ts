@@ -1,9 +1,11 @@
 import type { IAdapter, IPlugin, ISchema } from "../interface";
-import { validatorStore } from "./store";
+import { hooks, validators } from "./store";
 
 export const validator = {
   addAdapter: (adapter: IAdapter<ISchema>): void => {
-    validatorStore.set(adapter.name, adapter);
+    validators.set(adapter.name, adapter);
   },
-  addPlugin: (plugin: IPlugin): void => {},
+  addPlugin: (plugin: IPlugin): void => {
+    hooks.tap(plugin);
+  },
 };

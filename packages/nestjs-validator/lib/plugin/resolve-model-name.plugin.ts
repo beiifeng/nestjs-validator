@@ -1,26 +1,25 @@
-import type { IAdapter, IPlugin, IPluginCtx, ISchema, PluginType } from "../interface";
+import type { IAdapter, IPlugin, IPluginCtx, ISchema } from "../interface";
 
 export class ResolveModelNamePlugin implements IPlugin {
-  readonly type = "doModel" as const satisfies PluginType;
+  readonly type = "doModel";
   readonly name = "ResolveModelNamePlugin";
-
   #definedModels: Set<string>;
   #splitter: string;
   constructor() {
     this.#definedModels = new Set<string>();
     this.#splitter = "_";
   }
-  async apply(_adapter: IAdapter<ISchema>, _schema: ISchema, ctx: IPluginCtx): Promise<IPluginCtx> {
-    let { targetName } = ctx;
-    let count = 1;
-    if (this.#definedModels.has(targetName)) {
-      while (this.#definedModels.has(`${targetName}${this.#splitter}${count}`)) {
+  apply(_adapter: IAdapter<ISchema>, _schema: ISchema, ctx: IPluginCtx): IPluginCtx {
+    let { name } = ctx;
+    if (this.#definedModels.has(name)) {
+      let count = 1;
+      while (this.#definedModels.has(`${name}${this.#splitter}${count}`)) {
         count++;
       }
-      targetName = `${targetName}${this.#splitter}${count}`;
+      name = `${name}${this.#splitter}${count}`;
+      ctx.name = name;
     }
-    this.#definedModels.add(targetName);
-    ctx.targetName = targetName;
+    this.#definedModels.add(name);
     return ctx;
   }
 }

@@ -1,4 +1,11 @@
-import type { IAdapter, IModelZ, IProperty, ModelOptions } from "@beiifeng/nestjs-validator";
+import {
+  validator,
+  type IAdapter,
+  type IModelZ,
+  type IPlugin,
+  type IProperty,
+  type ModelOptions,
+} from "@beiifeng/nestjs-validator";
 import {
   IsArray,
   IsBoolean,
@@ -33,8 +40,27 @@ declare module "typebox" {
   }
 }
 
+const schemaValidator: Map<TSchema, Schema.Validator> = new Map();
+
+class TypeBoxSchemaCheckerPlugin implements IPlugin {
+  readonly type = "onModel";
+  readonly name = "TypeBoxSchemaCheckerPlugin";
+  apply(_adapter: IAdapter<TSchema>, schema: TSchema): void {
+    if (!IsSchema(schema)) {
+      return;
+    }
+    if (!schemaValidator.has(schema)) {
+      schemaValidator.set(schema, Schema.Compile(schema));
+    }
+  }
+}
+
 export class TypeBoxAdapter implements IAdapter<TSchema> {
   name = "TypeBox";
+
+  constructor() {
+    validator.addPlugin(new TypeBoxSchemaCheckerPlugin());
+  }
 
   isSchema(schema: TSchema): boolean {
     return IsSchema(schema);
@@ -99,12 +125,16 @@ export class TypeBoxAdapter implements IAdapter<TSchema> {
   }
 
   parse(schema: TSchema, plain: unknown): unknown {
-    // TODO: avoid runtime compilation of schema, use precompiled schema instead
+    if (schemaValidator.has(schema)) {
+      return schemaValidator.get(schema).Parse(plain);
+    }
     return Schema.Compile(schema).Parse(plain);
   }
 
   check(schema: TSchema, value: unknown): boolean {
-    // TODO: avoid runtime compilation of schema, use precompiled schema instead
+    if (schemaValidator.has(schema)) {
+      return schemaValidator.get(schema).Check(value);
+    }
     return Schema.Compile(schema).Check(value);
   }
 }
