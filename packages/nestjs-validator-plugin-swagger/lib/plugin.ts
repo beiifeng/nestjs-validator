@@ -14,8 +14,10 @@ export class NestjsValidatorPluginSwagger implements IPlugin {
       const property = properties[key];
       const { name, schema, required } = property;
 
-      // TODO: complete the type mapping between validator and swagger
-      ApiProperty({ name, required, type: getModel(schema) || Object })(target.prototype, key);
+      const isArray = adapter.native(schema) === Array;
+      const type = getModel(adapter.unwrap(schema)) || Object;
+
+      ApiProperty({ name, required, type, isArray })(target.prototype, key);
     });
     return ctx;
   }
