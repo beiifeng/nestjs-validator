@@ -137,5 +137,5 @@ export interface IPlugin {
   readonly name: string;
 
   // biome-ignore lint/suspicious/noConfusingVoidType: <Void is used to indicate that the plugin does not return a context, which is valid for certain plugin types.>
-  apply: (adapter: IAdapter<ISchema>, schema: IModelSchema, ctx?: IPluginCtx | undefined) => IPluginCtx | void;
+  apply: (adapter: IAdapter<ISchema>, schema: IModelSchema, ctx: IPluginCtx) => IPluginCtx | void;
 }

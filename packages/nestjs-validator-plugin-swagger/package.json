@@ -1,0 +1,41 @@
+{
+  "name": "@beiifeng/nestjs-validator-plugin-swagger",
+  "version": "0.0.1-beta.1",
+  "description": "",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "format": "biome format ./lib/**/*.ts --write",
+    "lint": "biome lint ./lib/**/*.ts"
+  },
+  "keywords": [
+    "nestjs",
+    "validation",
+    "swagger"
+  ],
+  "author": "YiFei Wang <beiifeng@hotmail.com>",
+  "license": "MIT",
+  "type": "commonjs",
+  "devDependencies": {
+    "@beiifeng/nestjs-validator": "workspace:*",
+    "@nestjs/common": "^11.1.28",
+    "@nestjs/core": "^11.1.28",
+    "@nestjs/swagger": "^11.4.6"
+  },
+  "peerDependencies": {
+    "@beiifeng/nestjs-validator": "workspace:*",
+    "@nestjs/common": "^11.0.1",
+    "@nestjs/core": "^11.0.1",
+    "@nestjs/swagger": "^11.4.0"
+  }
+}

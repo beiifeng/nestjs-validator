@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "declaration": true,
+    "noImplicitAny": false,
+    "removeComments": false,
+    "noLib": false,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "target": "ES2021",
+    "sourceMap": false,
+    "outDir": "./dist",
+    "rootDir": "./lib",
+    "skipLibCheck": true,
+    "strictNullChecks": false,
+    "types": [],
+    "lib": ["ESNext"]
+  },
+  "include": ["lib/**/*", "test/**/*", "e2e/**/*"],
+  "exclude": ["node_modules"]
+}

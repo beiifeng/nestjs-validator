@@ -3,6 +3,7 @@ packages:
   - "examples/*"
 
 allowBuilds:
+  '@scarf/scarf': false
   '@swc/core': true
 
 minimumReleaseAge: 1440
