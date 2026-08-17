@@ -1,10 +1,11 @@
 import type { IModelSchema, IModelZ } from "../interface";
 import { getAdapter, parseToPlain } from "../validator/helpers";
 import { hooks } from "../validator/store";
+import { MODEL_SCHEMA } from "./store";
 
 export function ModelZ<M extends IModelSchema>(schema: M): IModelZ<unknown> {
   const adapter = getAdapter(schema);
-  hooks.call("onModelZ", adapter, schema);
+  hooks.call("onModelZ", { adapter, schema, getModel: MODEL_SCHEMA.getModel });
   class InnerModel {
     constructor(plain?: Record<string, unknown>) {
       if (plain) {

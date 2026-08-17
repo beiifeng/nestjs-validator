@@ -1,12 +1,12 @@
-import type { IAdapter, IPlugin } from "@beiifeng/nestjs-validator";
-import { IsSchema, type TSchema } from "typebox";
+import type { IPlugin, IPluginRuntime } from "@beiifeng/nestjs-validator";
+import { IsSchema } from "typebox";
 import Schema from "typebox/schema";
 import { schemaValidator } from "./store";
 
 export class TypeBoxSchemaCheckerPlugin implements IPlugin {
   readonly type = "onModel";
   readonly name = "TypeBoxSchemaCheckerPlugin";
-  apply(_adapter: IAdapter<TSchema>, schema: TSchema): void {
+  apply({ schema }: IPluginRuntime): void {
     if (!IsSchema(schema)) {
       return;
     }

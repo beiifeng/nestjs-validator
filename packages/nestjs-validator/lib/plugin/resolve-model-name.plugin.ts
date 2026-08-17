@@ -1,4 +1,4 @@
-import type { IAdapter, IPlugin, IPluginCtx, ISchema } from "../interface";
+import type { IPlugin, IPluginModelCtx, IPluginRuntime } from "../interface";
 
 export class ResolveModelNamePlugin implements IPlugin {
   readonly type = "doModel";
@@ -9,7 +9,7 @@ export class ResolveModelNamePlugin implements IPlugin {
     this.#definedModels = new Set<string>();
     this.#splitter = "_";
   }
-  apply(_adapter: IAdapter<ISchema>, _schema: ISchema, ctx: IPluginCtx): IPluginCtx {
+  apply(_runtime: IPluginRuntime, ctx: IPluginModelCtx): IPluginModelCtx {
     let { name } = ctx;
     if (this.#definedModels.has(name)) {
       let count = 1;

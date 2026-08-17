@@ -6,15 +6,19 @@ import { MODEL_SCHEMA } from "./store";
 
 export function Model(schema: IModelSchema, options?: ModelOptions<ISchema>): ClassDecorator {
   const adapter = getAdapter(schema);
-  hooks.call("onModel", adapter, schema);
+  hooks.call("onModel", { adapter, schema, getModel: MODEL_SCHEMA.getModel });
   return (target) => {
     MODEL_SCHEMA.set(target as unknown as Type, schema);
 
-    hooks.call("doModel", adapter, schema, {
-      target: target as unknown as Type,
-      targetName: target.name,
-      name: options?.name || target.name,
-    });
+    hooks.call(
+      "doModel",
+      { adapter, schema, getModel: MODEL_SCHEMA.getModel },
+      {
+        target: target as unknown as Type,
+        targetName: target.name,
+        name: options?.name || target.name,
+      },
+    );
 
     return target;
   };
