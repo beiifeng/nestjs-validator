@@ -26,7 +26,7 @@ export class AppController {
   @Get("query")
   testQuery(
     @Query(Bind) role: Role,
-    @Query("code", Bind(t.Optional(t.String({ maxLength: 10 })))) code: string,
+    @Query("code", Bind(t.Union([t.String({ maxLength: 10 }), t.Undefined()]))) code?: string,
   ): string {
     this.logger.log(`Received is role: ${role instanceof Role}`);
     this.logger.log(`Received role: ${JSON.stringify(role)}`);

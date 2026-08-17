@@ -28,7 +28,7 @@ function createBindPipe(): Bind {
 
 export const Bind = createBindPipe();
 
-const logger = new Logger("NestjsValidator:BindPipe");
+const logger = new Logger("NestjsValidator");
 
 function innerTransform(this: BindPipe, value: unknown, metadata: ArgumentMetadata): unknown {
   switch (metadata.type) {
