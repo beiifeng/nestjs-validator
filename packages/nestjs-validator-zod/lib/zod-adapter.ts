@@ -16,6 +16,7 @@ import {
   ZodSuccess,
   ZodType,
   ZodUndefined,
+  ZodUnion,
   type output as ZodOutput,
 } from "zod";
 
@@ -67,6 +68,15 @@ export class ZodAdapter implements IAdapter<ZodType> {
     const unwrapped = unwrapZod(schema);
     if (unwrapped instanceof ZodArray) {
       return unwrapped.unwrap() as ZodType;
+    }
+    // Special handling for union types to unwrap optional and nullable schemas
+    // For example, use `z.union([z.string(), z.null()])` to represent a nullable string, and `z.union([z.string(), z.undefined()])` to represent an optional string.
+    // But this is unusual, because Zod has a special method `z.string().optional()` and `z.string().nullable()` to represent optional and nullable types.
+    if (unwrapped instanceof ZodUnion) {
+      const notNullUndefined = unwrapped.options.filter((s) => !(s instanceof ZodNull) && !(s instanceof ZodUndefined));
+      if (notNullUndefined.length === 1) {
+        return notNullUndefined[0] as ZodType;
+      }
     }
     return unwrapped;
   }

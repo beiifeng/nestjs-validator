@@ -61,12 +61,13 @@ function plainToInstance(value: unknown, metaType: Type | null, schema: ISchema 
   }
 
   let realMetaType: Type = metaType as Type;
-  if (!realMetaType) {
-    realMetaType = MODEL_SCHEMA.getModel(schema);
-  }
-  if (!realMetaType && !schema) {
+  if (!metaType && !schema) {
     logger.warn(`The type for variable '${path}' must exist, otherwise the value will return 'undefined'.`);
     return undefined;
+  }
+  if (!metaType || (metaType === Object && schema)) {
+    const _schema = unwrapSchema(schema);
+    realMetaType = MODEL_SCHEMA.getModel(_schema);
   }
   if (realMetaType === Object) {
     if (!schema) {

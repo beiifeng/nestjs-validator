@@ -24,10 +24,13 @@ export class AppController {
   }
 
   @Get("query")
-  testQuery(@Query(Bind) role: Role, @Query("code", Bind(z.string().max(10).optional())) code: string): string {
+  testQuery(
+    @Query(Bind) role: Role,
+    @Query("code", Bind(z.string().max(10).optional())) code?: string | undefined,
+  ): string {
     this.logger.log(`Received is role: ${role instanceof Role}`);
     this.logger.log(`Received role: ${JSON.stringify(role)}`);
-    this.logger.log(`Received code: ${code}`);
+    this.logger.log(`Received code: ${JSON.stringify(code)}`);
     return "ok";
   }
 }

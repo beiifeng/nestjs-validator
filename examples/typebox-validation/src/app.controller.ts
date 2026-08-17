@@ -1,7 +1,7 @@
 import { Bind } from "@beiifeng/nestjs-validator";
 import { Body, Controller, Get, Logger, Param, Post, Query } from "@nestjs/common";
-import { Role, User } from "./app.dto";
 import t from "typebox";
+import { Role, User } from "./app.dto";
 
 @Controller("test")
 export class AppController {
@@ -26,11 +26,11 @@ export class AppController {
   @Get("query")
   testQuery(
     @Query(Bind) role: Role,
-    @Query("code", Bind(t.Union([t.String({ maxLength: 10 }), t.Undefined()]))) code?: string,
+    @Query("code", Bind(t.Union([t.String({ maxLength: 10 }), t.Undefined()]))) code?: string | undefined,
   ): string {
     this.logger.log(`Received is role: ${role instanceof Role}`);
     this.logger.log(`Received role: ${JSON.stringify(role)}`);
-    this.logger.log(`Received code: ${code}`);
+    this.logger.log(`Received code: ${JSON.stringify(code)}`);
     return "ok";
   }
 }

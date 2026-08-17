@@ -16,6 +16,7 @@ import {
   IsSchema,
   IsString,
   IsUndefined,
+  IsUnion,
   type Static,
   type TFormat,
   type TObject,
@@ -77,6 +78,14 @@ export class TypeBoxAdapter implements IAdapter<TSchema> {
   unwrap(schema: TSchema): TSchema {
     if (IsArray(schema)) {
       return schema.items;
+    }
+    // Special handling for union types to unwrap optional and nullable schemas
+    // For example, use `t.Union([t.String(), t.Null()])` to represent a nullable string, and `t.Union([t.String(), t.Undefined()])` to represent an optional string.
+    if (IsUnion(schema)) {
+      const notNullUndefined = schema.anyOf.filter((s) => !IsNull(s) && !IsUndefined(s));
+      if (notNullUndefined.length === 1) {
+        return notNullUndefined[0];
+      }
     }
     return schema;
   }
