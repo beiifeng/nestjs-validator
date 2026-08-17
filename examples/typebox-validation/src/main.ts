@@ -1,11 +1,11 @@
 import { validator } from "@beiifeng/nestjs-validator";
 import { TypeBoxAdapter } from "@beiifeng/nestjs-validator-typebox";
-validator.addAdapter(new TypeBoxAdapter());
 
 import { NestFactory } from "@nestjs/core";
-import { AppModule } from "./app.module";
 
 async function bootstrap() {
+  validator.addAdapter(new TypeBoxAdapter());
+  const { AppModule } = await import("./app.module");
   const app = await NestFactory.create(AppModule);
   await app.listen(process.env.PORT ?? 3000);
 }

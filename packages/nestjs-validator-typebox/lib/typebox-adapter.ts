@@ -128,13 +128,17 @@ export class TypeBoxAdapter implements IAdapter<TSchema> {
     if (schemaValidator.has(schema)) {
       return schemaValidator.get(schema).Parse(plain);
     }
-    return Schema.Compile(schema).Parse(plain);
+    const compiled = Schema.Compile(schema);
+    schemaValidator.set(schema, compiled);
+    return compiled.Parse(plain);
   }
 
   check(schema: TSchema, value: unknown): boolean {
     if (schemaValidator.has(schema)) {
       return schemaValidator.get(schema).Check(value);
     }
-    return Schema.Compile(schema).Check(value);
+    const compiled = Schema.Compile(schema);
+    schemaValidator.set(schema, compiled);
+    return compiled.Check(value);
   }
 }
