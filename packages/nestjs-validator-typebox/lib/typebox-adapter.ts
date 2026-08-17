@@ -1,11 +1,4 @@
-import {
-  validator,
-  type IAdapter,
-  type IModelZ,
-  type IPlugin,
-  type IProperty,
-  type ModelOptions,
-} from "@beiifeng/nestjs-validator";
+import { validator, type IAdapter, type IModelZ, type IProperty, type ModelOptions } from "@beiifeng/nestjs-validator";
 import {
   IsArray,
   IsBoolean,
@@ -24,6 +17,8 @@ import {
   type TSchema,
 } from "typebox";
 import Schema from "typebox/schema";
+import { TypeBoxSchemaCheckerPlugin } from "./plugin";
+import { schemaValidator } from "./store";
 
 declare module "@beiifeng/nestjs-validator" {
   export function ModelZ<T extends TProperties>(schema: TObject<T>): IModelZ<Static<typeof schema>>;
@@ -38,21 +33,6 @@ declare module "typebox" {
 
   export interface TString {
     format?: TFormat;
-  }
-}
-
-const schemaValidator: Map<TSchema, Schema.Validator> = new Map();
-
-class TypeBoxSchemaCheckerPlugin implements IPlugin {
-  readonly type = "onModel";
-  readonly name = "TypeBoxSchemaCheckerPlugin";
-  apply(_adapter: IAdapter<TSchema>, schema: TSchema): void {
-    if (!IsSchema(schema)) {
-      return;
-    }
-    if (!schemaValidator.has(schema)) {
-      schemaValidator.set(schema, Schema.Compile(schema));
-    }
   }
 }
 
