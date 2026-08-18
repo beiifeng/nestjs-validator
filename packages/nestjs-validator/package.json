@@ -15,8 +15,8 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
-    "format": "biome format ./lib/**/*.ts --write",
-    "lint": "biome lint ./lib/**/*.ts"
+    "format": "biome format ./lib/ --write",
+    "lint": "biome lint ./lib/"
   },
   "keywords": [
     "nestjs",
