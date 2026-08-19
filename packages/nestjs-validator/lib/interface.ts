@@ -6,9 +6,11 @@ export interface IProperty<S> {
   name: string;
   schema: S;
   required?: boolean;
+  description?: string;
+  example?: unknown;
 }
 export interface IAdapter<S> {
-  name: string;
+  readonly name: string;
 
   /**
    * Check if the schema is a valid schema for this adapter.
@@ -89,6 +91,13 @@ export interface IAdapter<S> {
    * If the schema does not represent a model, it returns null.
    */
   getProperties(schema: S): Record<string, IProperty<S> | null>;
+
+  /**
+   * Get the JSON schema.
+   *
+   * Recommended to return `JSON Schema 2020-12` standard.
+   */
+  getJSONSchema(schema: S): unknown;
 
   /**
    * Parse a plain object into a value that matches the schema.

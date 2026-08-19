@@ -10,6 +10,7 @@ import {
   IsString,
   IsUndefined,
   IsUnion,
+  NonNullable,
   type Static,
   type TFormat,
   type TObject,
@@ -37,10 +38,11 @@ declare module "typebox" {
 }
 
 export class TypeBoxAdapter implements IAdapter<TSchema> {
-  name = "TypeBox";
-
-  constructor() {
+  readonly name = "TypeBox";
+  #keyOfIdentifier: string;
+  constructor({ keyOfIdentifier }: { keyOfIdentifier: string }) {
     validator.addPlugin(new TypeBoxSchemaCheckerPlugin());
+    this.#keyOfIdentifier = keyOfIdentifier || "$id";
   }
 
   isSchema(schema: TSchema): boolean {
@@ -62,10 +64,7 @@ export class TypeBoxAdapter implements IAdapter<TSchema> {
     // Special handling for union types to unwrap optional and nullable schemas
     // For example, use `t.Union([t.String(), t.Null()])` to represent a nullable string, and `t.Union([t.String(), t.Undefined()])` to represent an optional string.
     if (IsUnion(schema)) {
-      const notNullUndefined = schema.anyOf.filter((s) => !IsNull(s) && !IsUndefined(s));
-      if (notNullUndefined.length === 1) {
-        return notNullUndefined[0];
-      }
+      return NonNullable(schema);
     }
     return schema;
   }
@@ -93,7 +92,7 @@ export class TypeBoxAdapter implements IAdapter<TSchema> {
   }
 
   getIdentifier(schema: TSchema): unknown | null {
-    return schema.$id ?? schema;
+    return schema[this.#keyOfIdentifier] ?? schema;
   }
 
   getProperties(schema: TSchema): ReturnType<IAdapter<TSchema>["getProperties"]> {
@@ -111,6 +110,10 @@ export class TypeBoxAdapter implements IAdapter<TSchema> {
     });
 
     return properties;
+  }
+
+  getJSONSchema(schema: TSchema): unknown {
+    return schema;
   }
 
   parse(schema: TSchema, plain: unknown): unknown {

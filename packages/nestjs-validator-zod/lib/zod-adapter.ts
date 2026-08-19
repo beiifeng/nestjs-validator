@@ -1,5 +1,6 @@
 import type { IAdapter, IModelZ, IProperty, ModelOptions } from "@beiifeng/nestjs-validator";
 import {
+  toJSONSchema,
   ZodArray,
   ZodCatch,
   ZodDefault,
@@ -50,7 +51,11 @@ function unwrapZod(schema: ZodType): ZodType {
 }
 
 export class ZodAdapter implements IAdapter<ZodType> {
-  name = "Zod";
+  readonly name = "Zod";
+  #keyOfIdentifier: string;
+  constructor({ keyOfIdentifier }: { keyOfIdentifier: string }) {
+    this.#keyOfIdentifier = keyOfIdentifier || "$id";
+  }
 
   isSchema(schema: ZodType): boolean {
     return schema instanceof ZodType;
@@ -104,7 +109,7 @@ export class ZodAdapter implements IAdapter<ZodType> {
   }
 
   getIdentifier(schema: ZodType): unknown | null {
-    return schema.meta().$id ?? schema;
+    return schema.meta()[this.#keyOfIdentifier] ?? schema;
   }
 
   getProperties(schema: ZodType): ReturnType<IAdapter<ZodType>["getProperties"]> {
@@ -123,6 +128,10 @@ export class ZodAdapter implements IAdapter<ZodType> {
     }
 
     return properties;
+  }
+
+  getJSONSchema(schema: ZodType): unknown {
+    return toJSONSchema(schema, { target: "draft-2020-12", io: "input" });
   }
 
   parse(schema: ZodType, plain: unknown): unknown {
