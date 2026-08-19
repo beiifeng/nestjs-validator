@@ -131,7 +131,18 @@ export class ZodAdapter implements IAdapter<ZodType> {
   }
 
   getJSONSchema(schema: ZodType): unknown {
-    return toJSONSchema(schema, { target: "draft-2020-12", io: "input" });
+    return toJSONSchema(schema, {
+      target: "draft-2020-12",
+      io: "input",
+      unrepresentable: "any",
+      override: (ctx) => {
+        const def = ctx.zodSchema._zod.def;
+        if (def.type === "date") {
+          ctx.jsonSchema.type = "string";
+          ctx.jsonSchema.format = "date-time";
+        }
+      },
+    });
   }
 
   parse(schema: ZodType, plain: unknown): unknown {
