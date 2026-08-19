@@ -71,6 +71,7 @@ export interface IAdapter<S> {
     | NumberConstructor
     | BooleanConstructor
     | DateConstructor
+    | BigIntConstructor
     | ArrayConstructor
     | ObjectConstructor
     | null;
@@ -136,7 +137,7 @@ export type PluginType = "onModel" | "doModel" | "onModelZ";
 export interface IPluginRuntime {
   readonly adapter: IAdapter<ISchema>;
   readonly schema: IModelSchema;
-  readonly getModel: (schema: ISchema) => Type | null;
+  readonly getModel: (schema: ISchema) => ReturnType<IAdapter<ISchema>["native"]> | Type | null;
 }
 export interface IPluginModelCtx {
   readonly target: Type;

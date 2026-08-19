@@ -3,6 +3,16 @@ import type { IModelSchema, ISchema } from "../interface";
 import { MODEL_SCHEMA } from "../model/store";
 import { checkValue, getSchemaProperties, parseToPlain, unwrapSchema } from "../validator/helpers";
 
+type MixedType =
+  | StringConstructor
+  | NumberConstructor
+  | BooleanConstructor
+  | DateConstructor
+  | BigIntConstructor
+  | ArrayConstructor
+  | ObjectConstructor
+  | Type;
+
 export interface Bind<T = unknown, R = unknown> extends PipeTransform<T, R> {
   (schema: ISchema): PipeTransform<T, R>;
 }
@@ -55,12 +65,12 @@ function transformValue(plainValue: unknown, metadata: ArgumentMetadata, schema:
   return instance;
 }
 
-function plainToInstance(value: unknown, metaType: Type | null, schema: ISchema | undefined, path: string) {
+function plainToInstance(value: unknown, metaType: MixedType | null, schema: ISchema | undefined, path: string) {
   if (value === null || value === undefined) {
     return value;
   }
 
-  let realMetaType: Type = metaType as Type;
+  let realMetaType: MixedType = metaType;
   if (!metaType && !schema) {
     logger.warn(`The type for variable '${path}' must exist, otherwise the value will return 'undefined'.`);
     return undefined;
@@ -112,11 +122,19 @@ function plainToInstance(value: unknown, metaType: Type | null, schema: ISchema 
     }
     return undefined;
   }
+  if (realMetaType === BigInt) {
+    try {
+      return BigInt(value as string | number);
+    } catch (_error) {
+      logger.warn(`The value for variable '${path}' cannot be converted to BigInt, please check the schema.`);
+      return undefined;
+    }
+  }
   // For duplicate binding case.
   if (realMetaType && value instanceof realMetaType) {
     return value;
   }
-  return createInstance(value, realMetaType, schema, path);
+  return createInstance(value, realMetaType as Type, schema, path);
 }
 
 function createInstance<T extends object>(

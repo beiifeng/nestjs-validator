@@ -1,6 +1,7 @@
 import { validator, type IAdapter, type IModelZ, type IProperty, type ModelOptions } from "@beiifeng/nestjs-validator";
 import {
   IsArray,
+  IsBigInt,
   IsBoolean,
   IsInteger,
   IsNull,
@@ -70,6 +71,9 @@ export class TypeBoxAdapter implements IAdapter<TSchema> {
   }
 
   native(schema: TSchema): ReturnType<IAdapter<TSchema>["native"]> {
+    if (IsBigInt(schema)) {
+      return BigInt;
+    }
     if (IsNumber(schema) || IsInteger(schema)) {
       return Number;
     }

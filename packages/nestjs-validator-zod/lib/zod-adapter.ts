@@ -91,6 +91,8 @@ export class ZodAdapter implements IAdapter<ZodType> {
     switch (unwrapped.def.type) {
       case "string":
         return String;
+      case "bigint":
+        return BigInt;
       case "number":
       case "int":
         return Number;
