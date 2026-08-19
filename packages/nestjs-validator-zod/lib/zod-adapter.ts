@@ -1,4 +1,5 @@
 import type { IAdapter, IModelZ, IProperty, ModelOptions } from "@beiifeng/nestjs-validator";
+import { Logger } from "@nestjs/common";
 import {
   toJSONSchema,
   ZodArray,
@@ -24,10 +25,7 @@ import {
 declare module "@beiifeng/nestjs-validator" {
   export function ModelZ<T extends Record<string, ZodType>>(schema: ZodObject<T>): IModelZ<ZodOutput<typeof schema>>;
   export function Model<T extends Record<string, ZodType>>(schema: ZodObject<T>): ClassDecorator;
-  export function Model<T extends Record<string, ZodType>>(
-    schema: ZodObject<T>,
-    options: ModelOptions<ZodType>,
-  ): ClassDecorator;
+  export function Model<T extends Record<string, ZodType>>(schema: ZodObject<T>, options: ModelOptions): ClassDecorator;
 }
 
 function unwrapZod(schema: ZodType): ZodType {
@@ -50,11 +48,16 @@ function unwrapZod(schema: ZodType): ZodType {
   return current;
 }
 
+export type ZodAdapterOptions = {
+  keyOfIdentifier?: string;
+};
+
 export class ZodAdapter implements IAdapter<ZodType> {
   readonly name = "Zod";
+  #logger = new Logger(ZodAdapter.name);
   #keyOfIdentifier: string;
-  constructor({ keyOfIdentifier }: { keyOfIdentifier: string }) {
-    this.#keyOfIdentifier = keyOfIdentifier || "$id";
+  constructor(options?: ZodAdapterOptions) {
+    this.#keyOfIdentifier = options?.keyOfIdentifier || "$id";
   }
 
   isSchema(schema: ZodType): boolean {
@@ -76,11 +79,11 @@ export class ZodAdapter implements IAdapter<ZodType> {
     }
     // Special handling for union types to unwrap optional and nullable schemas
     // For example, use `z.union([z.string(), z.null()])` to represent a nullable string, and `z.union([z.string(), z.undefined()])` to represent an optional string.
-    // But this is unusual, because Zod has a special method `z.string().optional()` and `z.string().nullable()` to represent optional and nullable types.
+    // But this is unusual, because Zod has a special method `z.string().nullable()` and `z.string().optional()` to represent nullable and optional types.
     if (unwrapped instanceof ZodUnion) {
-      const notNullUndefined = unwrapped.options.filter((s) => !(s instanceof ZodNull) && !(s instanceof ZodUndefined));
-      if (notNullUndefined.length === 1) {
-        return notNullUndefined[0] as ZodType;
+      const notNil = unwrapped.options.filter((s) => !(s instanceof ZodNull) && !(s instanceof ZodUndefined));
+      if (notNil.length === 1) {
+        return notNil[0] as ZodType;
       }
     }
     return unwrapped;
@@ -89,8 +92,6 @@ export class ZodAdapter implements IAdapter<ZodType> {
   native(schema: ZodType): ReturnType<IAdapter<ZodType>["native"]> {
     const unwrapped = unwrapZod(schema);
     switch (unwrapped.def.type) {
-      case "string":
-        return String;
       case "bigint":
         return BigInt;
       case "number":
@@ -98,6 +99,8 @@ export class ZodAdapter implements IAdapter<ZodType> {
         return Number;
       case "boolean":
         return Boolean;
+      case "string":
+        return String;
       case "date":
         return Date;
       case "array":
@@ -106,12 +109,13 @@ export class ZodAdapter implements IAdapter<ZodType> {
       case "record":
         return Object;
       default:
+        this.#logger.debug(`Unsupported Zod type '${unwrapped.def.type}' for native type mapping.`);
         return null;
     }
   }
 
   getIdentifier(schema: ZodType): unknown | null {
-    return schema.meta()[this.#keyOfIdentifier] ?? schema;
+    return schema.meta()?.[this.#keyOfIdentifier] ?? schema;
   }
 
   getProperties(schema: ZodType): ReturnType<IAdapter<ZodType>["getProperties"]> {
@@ -126,7 +130,13 @@ export class ZodAdapter implements IAdapter<ZodType> {
         continue;
       }
       const _schema = unwrapped.shape[name] as ZodType;
-      properties[name] = { name, schema: _schema, required: !_schema.safeParse(undefined).success };
+      properties[name] = {
+        name,
+        schema: _schema,
+        required: !_schema.safeParse(undefined).success,
+        description: _schema.meta()?.description || _schema.description,
+        example: _schema.meta()?.example,
+      };
     }
 
     return properties;

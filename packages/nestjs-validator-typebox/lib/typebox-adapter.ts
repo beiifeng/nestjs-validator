@@ -1,4 +1,5 @@
 import { validator, type IAdapter, type IModelZ, type IProperty, type ModelOptions } from "@beiifeng/nestjs-validator";
+import { Logger } from "@nestjs/common";
 import {
   IsArray,
   IsBigInt,
@@ -12,25 +13,25 @@ import {
   IsUndefined,
   IsUnion,
   NonNullable,
+  TSchemaOptions,
   type Static,
   type TFormat,
   type TObject,
   type TProperties,
   type TSchema,
 } from "typebox";
-import Schema from "typebox/schema";
-import { TypeBoxSchemaCheckerPlugin } from "./plugin";
-import { schemaValidator } from "./store";
+import { TypeBoxSchemaPlugin } from "./plugin";
+import { validators } from "./store";
 
 declare module "@beiifeng/nestjs-validator" {
   export function ModelZ<T extends TProperties>(schema: TObject<T>): IModelZ<Static<typeof schema>>;
   export function Model<T extends TProperties>(schema: TObject<T>): ClassDecorator;
-  export function Model<T extends TProperties>(schema: TObject<T>, options: ModelOptions<TSchema>): ClassDecorator;
+  export function Model<T extends TProperties>(schema: TObject<T>, options: ModelOptions): ClassDecorator;
 }
 
 declare module "typebox" {
-  export interface TSchema {
-    $id?: string;
+  export interface TSchemaOptions {
+    id?: string;
   }
 
   export interface TString {
@@ -38,12 +39,17 @@ declare module "typebox" {
   }
 }
 
+export type TypeBoxAdapterOptions = {
+  keyOfIdentifier?: string;
+};
+
 export class TypeBoxAdapter implements IAdapter<TSchema> {
   readonly name = "TypeBox";
   #keyOfIdentifier: string;
-  constructor({ keyOfIdentifier }: { keyOfIdentifier: string }) {
-    validator.addPlugin(new TypeBoxSchemaCheckerPlugin());
-    this.#keyOfIdentifier = keyOfIdentifier || "$id";
+  #logger = new Logger(TypeBoxAdapter.name);
+  constructor(options?: TypeBoxAdapterOptions) {
+    validator.addPlugin(new TypeBoxSchemaPlugin());
+    this.#keyOfIdentifier = options?.keyOfIdentifier || "$id";
   }
 
   isSchema(schema: TSchema): boolean {
@@ -81,7 +87,7 @@ export class TypeBoxAdapter implements IAdapter<TSchema> {
       return Boolean;
     }
     if (IsString(schema)) {
-      if (schema.format === "date-time" || schema.format === "date") {
+      if (schema.format === "date-time" || schema.format === "date" || schema.format === "time") {
         return Date;
       }
       return String;
@@ -92,6 +98,7 @@ export class TypeBoxAdapter implements IAdapter<TSchema> {
     if (IsObject(schema)) {
       return Object;
     }
+    this.#logger.debug(`Unsupported TypeBox type for native type mapping: ${JSON.stringify(schema)}`);
     return null;
   }
 
@@ -105,11 +112,13 @@ export class TypeBoxAdapter implements IAdapter<TSchema> {
     }
 
     const properties: Record<string, IProperty<TSchema>> = {};
-    Object.entries(schema.properties).forEach(([key, value]) => {
-      properties[key] = {
-        name: key,
-        schema: value,
-        required: schema.required?.includes(key) ?? false,
+    Object.entries(schema.properties).forEach(([name, _schema]) => {
+      properties[name] = {
+        name,
+        schema: _schema,
+        required: Boolean(schema.required?.includes(name)),
+        description: (_schema as TSchemaOptions).description,
+        example: (_schema as TSchemaOptions).examples,
       };
     });
 
@@ -121,20 +130,10 @@ export class TypeBoxAdapter implements IAdapter<TSchema> {
   }
 
   parse(schema: TSchema, plain: unknown): unknown {
-    if (schemaValidator.has(schema)) {
-      return schemaValidator.get(schema).Parse(plain);
-    }
-    const compiled = Schema.Compile(schema);
-    schemaValidator.set(schema, compiled);
-    return compiled.Parse(plain);
+    return validators.getOrInsert(schema).Parse(plain);
   }
 
   check(schema: TSchema, value: unknown): boolean {
-    if (schemaValidator.has(schema)) {
-      return schemaValidator.get(schema).Check(value);
-    }
-    const compiled = Schema.Compile(schema);
-    schemaValidator.set(schema, compiled);
-    return compiled.Check(value);
+    return validators.getOrInsert(schema).Check(value);
   }
 }

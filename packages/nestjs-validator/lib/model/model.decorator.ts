@@ -1,22 +1,22 @@
 import type { Type } from "@nestjs/common";
-import type { IModelSchema, ISchema, ModelOptions } from "../interface";
-import { getAdapter } from "../validator/helpers";
-import { hooks } from "../validator/store";
-import { MODEL_SCHEMA } from "./store";
+import { getAdapter, getType, registerModelSchema } from "../helpers";
+import { hooks } from "../hooks";
+import type { IModelSchema, ModelOptions } from "../interface";
 
-export function Model(schema: IModelSchema, options?: ModelOptions<ISchema>): ClassDecorator {
+export function Model(schema: IModelSchema, options?: ModelOptions): ClassDecorator {
   const adapter = getAdapter(schema);
-  hooks.call("onModel", { adapter, schema, getModel: MODEL_SCHEMA.getModel });
+  hooks.call("onModel", { adapter, schema, getType });
   return (target) => {
-    MODEL_SCHEMA.set(target as unknown as Type, schema);
+    registerModelSchema(target as unknown as Type, schema);
 
     hooks.call(
       "doModel",
-      { adapter, schema, getModel: MODEL_SCHEMA.getModel },
+      { adapter, schema, getType },
       {
         target: target as unknown as Type,
         targetName: target.name,
         name: options?.name || target.name,
+        description: options?.description,
       },
     );
 

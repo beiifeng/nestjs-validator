@@ -1,1 +1,1 @@
-export { ResolveModelNamePlugin } from "./resolve-model-name.plugin";
+export { ResolveModelPlugin } from "./resolve-model.plugin";

@@ -1,15 +1,15 @@
-import type { IPlugin, IPluginModelCtx, IPluginRuntime } from "../interface";
+import type { IPlugin, IPluginCtx, IPluginRt } from "../interface";
 
-export class ResolveModelNamePlugin implements IPlugin {
+export class ResolveModelPlugin implements IPlugin {
   readonly type = "doModel";
-  readonly name = "ResolveModelNamePlugin";
+  readonly name = "ResolveModelPlugin";
   #definedModels: Set<string>;
   #splitter: string;
-  constructor() {
+  constructor({ splitter }: { splitter?: string } = {}) {
     this.#definedModels = new Set<string>();
-    this.#splitter = "_";
+    this.#splitter = splitter ?? "_";
   }
-  apply(_runtime: IPluginRuntime, ctx: IPluginModelCtx): IPluginModelCtx {
+  apply(_rt: IPluginRt, ctx: IPluginCtx): IPluginCtx {
     let { name } = ctx;
     if (this.#definedModels.has(name)) {
       let count = 1;

@@ -1,10 +1,10 @@
-import type { IPlugin, IPluginModelCtx, IPluginRuntime } from "@beiifeng/nestjs-validator";
+import type { IPlugin, IPluginCtx, IPluginRt } from "@beiifeng/nestjs-validator";
 import { ApiProperty, ApiSchema } from "@nestjs/swagger";
 
 export class NestjsValidatorPluginSwagger implements IPlugin {
   readonly type = "doModel";
   readonly name = "NestjsValidatorPluginSwagger";
-  apply({ adapter, schema, getModel }: IPluginRuntime, ctx: IPluginModelCtx): IPluginModelCtx {
+  apply({ adapter, schema, getType }: IPluginRt, ctx: IPluginCtx): IPluginCtx {
     const { target, targetName, name } = ctx;
     if (targetName !== name) {
       ApiSchema({ name })(target);
@@ -15,7 +15,7 @@ export class NestjsValidatorPluginSwagger implements IPlugin {
       const { name, schema, required } = property;
 
       const isArray = adapter.native(schema) === Array;
-      const type = getModel(adapter.unwrap(schema)) || Object;
+      const type = getType(adapter.unwrap(schema)) || Object;
 
       ApiProperty({ name, required, type, isArray })(target.prototype, key);
     });

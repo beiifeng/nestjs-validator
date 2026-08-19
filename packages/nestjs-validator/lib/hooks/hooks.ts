@@ -1,6 +1,4 @@
-import type { IAdapter, IPlugin, IPluginModelCtx, IPluginRuntime, ISchema, PluginType } from "../interface";
-
-export const validators = new Map<string, IAdapter<ISchema>>();
+import type { IPlugin, IPluginCtx, IPluginRt, PluginType } from "../interface";
 
 class Hooks {
   #hooks: Map<PluginType, Array<IPlugin>>;
@@ -18,14 +16,14 @@ class Hooks {
     }
   }
 
-  call(type: Extract<PluginType, "doModel">, runtime: IPluginRuntime, ctx: IPluginModelCtx): IPluginModelCtx;
-  call(type: Exclude<PluginType, "doModel">, runtime: IPluginRuntime): void;
-  call(type: PluginType, runtime: IPluginRuntime, ctx?: IPluginModelCtx): IPluginModelCtx | undefined {
+  call(type: Extract<PluginType, "doModel">, rt: IPluginRt, ctx: IPluginCtx): IPluginCtx;
+  call(type: Exclude<PluginType, "doModel">, rt: IPluginRt): void;
+  call(type: PluginType, rt: IPluginRt, ctx?: IPluginCtx): IPluginCtx | undefined {
     const plugins = this.#hooks.get(type);
     if (!plugins.length) {
       return ctx;
     }
-    return plugins.reduce((prevCtx, plugin) => plugin.apply(runtime, prevCtx) || prevCtx, ctx);
+    return plugins.reduce((prevCtx, plugin) => plugin.apply(rt, prevCtx) || prevCtx, ctx);
   }
 }
 

@@ -2,8 +2,8 @@ export {
   IAdapter,
   IModelZ,
   IPlugin,
-  IPluginModelCtx,
-  IPluginRuntime,
+  IPluginCtx,
+  IPluginRt,
   IProperty,
   ModelOptions,
   PluginType,
@@ -11,5 +11,5 @@ export {
 
 export { Model, ModelZ } from "./model";
 export { Bind } from "./pipe";
-export { ResolveModelNamePlugin } from "./plugin";
-export { validator } from "./validator";
+export { ResolveModelPlugin as ResolveModelNamePlugin } from "./plugin";
+export { validator } from "./registry";

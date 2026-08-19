@@ -1,17 +1,6 @@
 import { BadRequestException, Logger, type ArgumentMetadata, type PipeTransform, type Type } from "@nestjs/common";
-import type { IModelSchema, ISchema } from "../interface";
-import { MODEL_SCHEMA } from "../model/store";
-import { checkValue, getSchemaProperties, parseToPlain, unwrapSchema } from "../validator/helpers";
-
-type MixedType =
-  | StringConstructor
-  | NumberConstructor
-  | BooleanConstructor
-  | DateConstructor
-  | BigIntConstructor
-  | ArrayConstructor
-  | ObjectConstructor
-  | Type;
+import { check, getProperties, getSchema, getType, parse, unwrap } from "../helpers";
+import type { IModelSchema, ISchema, MixedType } from "../interface";
 
 export interface Bind<T = unknown, R = unknown> extends PipeTransform<T, R> {
   (schema: ISchema): PipeTransform<T, R>;
@@ -53,10 +42,10 @@ function innerTransform(this: BindPipe, value: unknown, metadata: ArgumentMetada
 
 function transformValue(plainValue: unknown, metadata: ArgumentMetadata, schema: ISchema | undefined) {
   const { metatype, type, data = "" } = metadata;
-  schema = schema || MODEL_SCHEMA.getSchema(metatype);
+  schema = schema || getSchema(metatype);
   const instance = plainToInstance(plainValue, metatype, schema, `${type}:${data}`);
   if (schema) {
-    const valid = checkValue(schema, instance);
+    const valid = check(schema, instance);
     if (!valid) {
       logger.warn(`The value for variable '${type}:${data}' is invalid, please check the schema.`);
       throw new BadRequestException(`The value for variable '${type}:${data}' is invalid, please check the schema.`);
@@ -76,8 +65,8 @@ function plainToInstance(value: unknown, metaType: MixedType | null, schema: ISc
     return undefined;
   }
   if (!metaType || (metaType === Object && schema)) {
-    const _schema = unwrapSchema(schema);
-    realMetaType = MODEL_SCHEMA.getModel(_schema);
+    const _schema = unwrap(schema);
+    realMetaType = getType(_schema);
   }
   if (realMetaType === Object) {
     if (!schema) {
@@ -90,8 +79,8 @@ function plainToInstance(value: unknown, metaType: MixedType | null, schema: ISc
   }
   if (realMetaType === Array) {
     const _value = Array.isArray(value) ? value : [value];
-    const _schema = unwrapSchema(schema);
-    const _type = MODEL_SCHEMA.getModel(_schema);
+    const _schema = unwrap(schema);
+    const _type = getType(_schema);
     return _value.map((item, idx) => plainToInstance(item, _type, _schema, `${path}.[${idx}]`));
   }
   if (realMetaType === String) {
@@ -144,13 +133,13 @@ function createInstance<T extends object>(
   path: string,
 ): T {
   if (!metaType) {
-    return parseToPlain(schema as ISchema, value) as T;
+    return parse(schema as ISchema, value) as T;
   }
   const instance = new metaType() as T;
   if (!schema) {
     return instance;
   }
-  const properties = getSchemaProperties(schema as IModelSchema);
+  const properties = getProperties(schema as IModelSchema);
   if (!properties) {
     return instance;
   }
