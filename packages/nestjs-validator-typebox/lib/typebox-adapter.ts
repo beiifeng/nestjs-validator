@@ -4,6 +4,7 @@ import {
   IsArray,
   IsBigInt,
   IsBoolean,
+  IsEnum,
   IsInteger,
   IsNull,
   IsNumber,
@@ -64,6 +65,10 @@ export class TypeBoxAdapter implements IAdapter<TSchema> {
     return IsUndefined(schema);
   }
 
+  isEnum(schema: TSchema): boolean {
+    return IsEnum(schema);
+  }
+
   unwrap(schema: TSchema): TSchema {
     if (IsArray(schema)) {
       return schema.items;
@@ -98,6 +103,9 @@ export class TypeBoxAdapter implements IAdapter<TSchema> {
     if (IsObject(schema)) {
       return Object;
     }
+    if (IsEnum(schema)) {
+      return typeof schema.enum[0] === "number" ? Number : String;
+    }
     this.#logger.debug(`Unsupported TypeBox type for native type mapping: ${JSON.stringify(schema)}`);
     return null;
   }
@@ -123,6 +131,13 @@ export class TypeBoxAdapter implements IAdapter<TSchema> {
     });
 
     return properties;
+  }
+
+  getEnumValues(schema: TSchema): unknown[] | null {
+    if (!IsEnum(schema)) {
+      return null;
+    }
+    return schema.enum;
   }
 
   getJSONSchema(schema: TSchema): unknown {

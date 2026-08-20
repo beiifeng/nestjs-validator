@@ -16,8 +16,9 @@ export class NestjsValidatorPluginSwagger implements IPlugin {
 
       const isArray = adapter.native(schema) === Array;
       const type = getType(adapter.unwrap(schema)) || Object;
+      const enumValues = adapter.getEnumValues(schema) || undefined;
 
-      ApiProperty({ name, required, type, isArray })(target.prototype, key);
+      ApiProperty({ name, required, type, isArray, enum: enumValues })(target.prototype, key);
     });
     return ctx;
   }

@@ -5,6 +5,7 @@ import {
   ZodArray,
   ZodCatch,
   ZodDefault,
+  ZodEnum,
   ZodExactOptional,
   ZodLazy,
   ZodNonOptional,
@@ -72,6 +73,10 @@ export class ZodAdapter implements IAdapter<ZodType> {
     return unwrapZod(schema) instanceof ZodUndefined;
   }
 
+  isEnum(schema: ZodType): boolean {
+    return unwrapZod(schema) instanceof ZodEnum;
+  }
+
   unwrap(schema: ZodType): ZodType {
     const unwrapped = unwrapZod(schema);
     if (unwrapped instanceof ZodArray) {
@@ -108,6 +113,8 @@ export class ZodAdapter implements IAdapter<ZodType> {
       case "object":
       case "record":
         return Object;
+      case "enum":
+        return typeof (unwrapped as ZodEnum).options[0] === "number" ? Number : String;
       default:
         this.#logger.debug(`Unsupported Zod type '${unwrapped.def.type}' for native type mapping.`);
         return null;
@@ -140,6 +147,14 @@ export class ZodAdapter implements IAdapter<ZodType> {
     }
 
     return properties;
+  }
+
+  getEnumValues(schema: ZodType): unknown[] | null {
+    const unwrapped = unwrapZod(schema);
+    if (!(unwrapped instanceof ZodEnum)) {
+      return null;
+    }
+    return unwrapped.options;
   }
 
   getJSONSchema(schema: ZodType): unknown {

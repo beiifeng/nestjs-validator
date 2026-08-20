@@ -38,6 +38,11 @@ export interface IAdapter<S> {
   isUndefined(schema: S): boolean;
 
   /**
+   * Check if the schema represents an enumeration type (enum).
+   */
+  isEnum(schema: S): boolean;
+
+  /**
    * Unwrap the schema to get the underlying type.
    * Remove optional, nullable, array, or default wrappers to get the core schema type.
    *
@@ -124,6 +129,13 @@ export interface IAdapter<S> {
    * If the schema does not represent a model, it returns null.
    */
   getProperties(schema: S): Record<string, IProperty<S> | null>;
+
+  /**
+   * Get the enumeration values of a schema if it represents an enum type.
+   *
+   * Returns an array of enum values if the schema is an enum, otherwise returns null.
+   */
+  getEnumValues(schema: S): unknown[] | null;
 
   /**
    * Get the JSON schema.
