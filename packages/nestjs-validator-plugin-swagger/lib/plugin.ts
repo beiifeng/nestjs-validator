@@ -12,13 +12,22 @@ export class NestjsValidatorPluginSwagger implements IPlugin {
     const properties = adapter.getProperties(schema);
     Object.keys(properties).forEach((key) => {
       const property = properties[key];
-      const { name, schema, required } = property;
+      const { name, schema, required, description, example, examples } = property;
 
       const isArray = adapter.native(schema) === Array;
       const type = getType(adapter.unwrap(schema)) || Object;
       const enumValues = adapter.getEnumValues(schema) || undefined;
 
-      ApiProperty({ name, required, type, isArray, enum: enumValues })(target.prototype, key);
+      ApiProperty({
+        name,
+        type,
+        isArray,
+        required,
+        enum: enumValues,
+        description,
+        example,
+        examples,
+      })(target.prototype, key);
     });
     return ctx;
   }

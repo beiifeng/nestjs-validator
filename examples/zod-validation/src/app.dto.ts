@@ -1,5 +1,5 @@
 import { Model, ModelZ } from "@beiifeng/nestjs-validator";
-import { z } from "zod";
+import z from "zod";
 
 const $Role = z
   .object({

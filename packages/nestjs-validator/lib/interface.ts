@@ -18,6 +18,7 @@ export interface IProperty<S> {
   required?: boolean;
   description?: string;
   example?: unknown;
+  examples?: unknown[] | Record<string, unknown>;
 }
 export interface IAdapter<S> {
   readonly name: string;

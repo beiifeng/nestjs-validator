@@ -54,7 +54,7 @@ export class TypeBoxAdapter implements IAdapter<TSchema> {
   }
 
   isSchema(schema: TSchema): boolean {
-    return IsSchema(schema);
+    return IsSchema(schema) && "~kind" in schema;
   }
 
   isNull(schema: TSchema): boolean {
@@ -126,7 +126,8 @@ export class TypeBoxAdapter implements IAdapter<TSchema> {
         schema: _schema,
         required: Boolean(schema.required?.includes(name)),
         description: (_schema as TSchemaOptions).description,
-        example: (_schema as TSchemaOptions).examples,
+        example: (_schema as TSchemaOptions).example,
+        examples: (_schema as TSchemaOptions).examples as unknown[] | undefined,
       };
     });
 

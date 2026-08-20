@@ -143,6 +143,7 @@ export class ZodAdapter implements IAdapter<ZodType> {
         required: !_schema.safeParse(undefined).success,
         description: _schema.meta()?.description || _schema.description,
         example: _schema.meta()?.example,
+        examples: _schema.meta()?.examples as unknown[] | undefined,
       };
     }
 
