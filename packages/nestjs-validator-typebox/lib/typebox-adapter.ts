@@ -14,7 +14,7 @@ import {
   IsUndefined,
   IsUnion,
   NonNullable,
-  TSchemaOptions,
+  type TSchemaOptions,
   type Static,
   type TFormat,
   type TObject,
