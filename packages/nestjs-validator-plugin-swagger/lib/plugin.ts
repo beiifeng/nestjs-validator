@@ -5,9 +5,9 @@ export class NestjsValidatorPluginSwagger implements IPlugin {
   readonly type = "doModel";
   readonly name = "NestjsValidatorPluginSwagger";
   apply({ adapter, schema, getType }: IPluginRt, ctx: IPluginCtx): IPluginCtx {
-    const { target, targetName, name } = ctx;
-    if (targetName !== name) {
-      ApiSchema({ name })(target);
+    const { target, targetName, name, description } = ctx;
+    if (targetName !== name || description) {
+      ApiSchema({ name, description })(target);
     }
     const properties = adapter.getProperties(schema);
     Object.keys(properties).forEach((key) => {
