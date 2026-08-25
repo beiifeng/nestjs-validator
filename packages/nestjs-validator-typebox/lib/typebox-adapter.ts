@@ -14,12 +14,12 @@ import {
   IsUndefined,
   IsUnion,
   NonNullable,
-  type TSchemaOptions,
   type Static,
   type TFormat,
   type TObject,
   type TProperties,
   type TSchema,
+  type TSchemaOptions,
 } from "typebox";
 import { TypeBoxSchemaPlugin } from "./plugin";
 import { validators } from "./store";
@@ -132,6 +132,14 @@ export class TypeBoxAdapter implements IAdapter<TSchema> {
     });
 
     return properties;
+  }
+
+  getDefaultValue(schema: TSchema): unknown | undefined {
+    try {
+      return validators.getOrInsert(schema).Parse(undefined);
+    } catch {
+      return undefined;
+    }
   }
 
   getEnumValues(schema: TSchema): unknown[] | null {

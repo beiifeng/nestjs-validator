@@ -1,5 +1,5 @@
 import { BadRequestException, Logger, type ArgumentMetadata, type PipeTransform, type Type } from "@nestjs/common";
-import { check, getProperties, getSchema, getType, parse, unwrap } from "../helpers";
+import { check, getDefaultValue, getProperties, getSchema, getType, parse, unwrap } from "../helpers";
 import type { IModelSchema, ISchema, MixedType } from "../interface";
 
 export interface Bind<T = unknown, R = unknown> extends PipeTransform<T, R> {
@@ -55,8 +55,12 @@ function transformValue(plainValue: unknown, metadata: ArgumentMetadata, schema:
 }
 
 function plainToInstance(value: unknown, metaType: MixedType | null, schema: ISchema | undefined, path: string) {
-  if (value === null || value === undefined) {
+  if (value === null) {
     return value;
+  }
+
+  if (value === undefined && schema) {
+    value = getDefaultValue(schema);
   }
 
   let realMetaType: MixedType = metaType;

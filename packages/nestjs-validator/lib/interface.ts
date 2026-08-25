@@ -132,6 +132,13 @@ export interface IAdapter<S> {
   getProperties(schema: S): Record<string, IProperty<S> | null>;
 
   /**
+   * Get the default value for a schema if it has one.
+   *
+   * Returns the default value if the schema has a default, otherwise returns undefined.
+   */
+  getDefaultValue(schema: S): unknown | undefined;
+
+  /**
    * Get the enumeration values of a schema if it represents an enum type.
    *
    * Returns an array of enum values if the schema is an enum, otherwise returns null.

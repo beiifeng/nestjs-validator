@@ -150,6 +150,10 @@ export class ZodAdapter implements IAdapter<ZodType> {
     return properties;
   }
 
+  getDefaultValue(schema: ZodType): unknown | undefined {
+    return schema.safeParse(undefined).data;
+  }
+
   getEnumValues(schema: ZodType): unknown[] | null {
     const unwrapped = unwrapZod(schema);
     if (!(unwrapped instanceof ZodEnum)) {

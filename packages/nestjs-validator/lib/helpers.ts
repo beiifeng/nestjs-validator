@@ -33,6 +33,10 @@ export function getProperties(schema: ISchema): Record<string, IProperty<ISchema
   return getAdapter(schema).getProperties(schema);
 }
 
+export function getDefaultValue(schema: ISchema): ReturnType<IAdapter<ISchema>["getDefaultValue"]> {
+  return getAdapter(schema).getDefaultValue(schema);
+}
+
 export function getJSONSchema(schema: ISchema): ReturnType<IAdapter<ISchema>["getJSONSchema"]> {
   return getAdapter(schema).getJSONSchema(schema);
 }
