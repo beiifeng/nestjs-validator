@@ -1,5 +1,5 @@
 {
-  "name": "@beiifeng/nestjs-validator",
+  "name": "@beiifeng/nestjs-validator-plugin-swagger",
   "version": "0.0.1-beta.1",
   "description": "",
   "main": "./dist/index.js",
@@ -17,18 +17,20 @@
   "keywords": [
     "nestjs",
     "validation",
-    "zod",
-    "typebox"
+    "swagger"
   ],
   "author": "YiFei Wang <beiifeng@hotmail.com>",
   "license": "MIT",
   "type": "module",
   "devDependencies": {
     "@nestjs/common": "^11.1.28",
-    "@nestjs/core": "^11.1.28"
+    "@nestjs/core": "^11.1.28",
+    "@nestjs/swagger": "^11.4.6"
   },
   "peerDependencies": {
+    "@beiifeng/nestjs-validator": "workspace:*",
     "@nestjs/common": "^11.0.1",
-    "@nestjs/core": "^11.0.1"
+    "@nestjs/core": "^11.0.1",
+    "@nestjs/swagger": "^11.4.0"
   }
 }

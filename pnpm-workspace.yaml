@@ -1,4 +1,14 @@
 packages:
   - "packages/*"
+  - "examples/*"
 
-minimumReleaseAge: 4320
+allowBuilds:
+  '@scarf/scarf': false
+  '@swc/core': true
+
+minimumReleaseAge: 1440
+
+tasks:
+  build:
+    dependsOn:
+      - ^build

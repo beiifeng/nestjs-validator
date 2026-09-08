@@ -34,3 +34,4 @@ Thumbs.db
 *.user
 *.userossc
 *.sln.docstates
+*.tsbuildinfo

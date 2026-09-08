@@ -1,0 +1,12 @@
+{
+  "extends": "//",
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "preset": "recommended",
+      "style": {
+        "useImportType": "off"
+      }
+    }
+  }
+}

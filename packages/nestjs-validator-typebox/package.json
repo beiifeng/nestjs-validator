@@ -1,39 +1,37 @@
 {
   "name": "@beiifeng/nestjs-validator-typebox",
-  "version": "0.0.1",
+  "version": "0.0.1-beta.1",
   "description": "",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "require": "./dist/index.js",
-      "default": "./dist/index.js"
-    },
-    "./package.json": "./package.json"
+    ".": "./dist/index.js",
+    "./*.js": "./dist/*.js",
+    "./*": "./dist/*.js"
   },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
-    "format": "biome format ./lib/**/*.ts --write",
-    "lint": "biome lint ./lib/**/*.ts"
+    "format": "biome format ./src/ --write",
+    "lint": "biome lint ./src/"
   },
-  "keywords": [],
+  "keywords": [
+    "nestjs",
+    "validation",
+    "typebox"
+  ],
   "author": "YiFei Wang <beiifeng@hotmail.com>",
   "license": "MIT",
   "type": "module",
   "devDependencies": {
-    "@beiifeng/nestjs-validator": "^0.0.1",
+    "@beiifeng/nestjs-validator": "workspace:*",
     "@nestjs/common": "^11.1.28",
     "@nestjs/core": "^11.1.28",
-    "reflect-metadata": "^0.2.2",
     "typebox": "^1.3.11"
   },
   "peerDependencies": {
-    "@beiifeng/nestjs-validator": "^0.0.1",
+    "@beiifeng/nestjs-validator": "workspace:*",
     "@nestjs/common": "^11.0.1",
     "@nestjs/core": "^11.0.1",
-    "reflect-metadata": "^0.1.12 || ^0.2.0",
     "typebox": "^1.3.0"
   }
 }
