@@ -1,20 +1,4 @@
 {
-  "compilerOptions": {
-    "module": "commonjs",
-    "declaration": true,
-    "noImplicitAny": false,
-    "removeComments": false,
-    "noLib": false,
-    "emitDecoratorMetadata": true,
-    "experimentalDecorators": true,
-    "sourceMap": false,
-    "outDir": "./dist",
-    "rootDir": "./lib",
-    "skipLibCheck": true,
-    "strictNullChecks": false,
-    "types": [],
-    "lib": ["ESNext"]
-  },
-  "include": ["lib/**/*", "test/**/*", "e2e/**/*"],
-  "exclude": ["node_modules"]
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {}
 }

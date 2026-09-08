@@ -1,1 +1,0 @@
-export { NestjsValidatorPluginSwagger } from "./plugin";
