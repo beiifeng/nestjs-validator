@@ -43,18 +43,19 @@ function innerTransform(this: BindPipe, value: unknown, metadata: ArgumentMetada
 function transformValue(plainValue: unknown, metadata: ArgumentMetadata, schema: ISchema | undefined) {
   const { metatype, type, data = "" } = metadata;
   schema = schema || getSchema(metatype);
-  const instance = plainToInstance(plainValue, metatype, schema, `${type}:${data}`);
+  const paths = data ? [type, data] : [type];
+  const instance = plainToInstance(plainValue, metatype, schema, paths);
   if (schema) {
     const valid = check(schema, instance);
     if (!valid) {
       logger.warn(`The value for variable '${type}:${data}' is invalid, please check the schema.`);
-      throw new BadRequestException(`The value for variable '${type}:${data}' is invalid, please check the schema.`);
+      throw new BadRequestException(`The value for variable '${paths.join(".")}' is invalid, please check the schema.`);
     }
   }
   return instance;
 }
 
-function plainToInstance(value: unknown, metaType: MixedType | null, schema: ISchema | undefined, path: string) {
+function plainToInstance(value: unknown, metaType: MixedType | null, schema: ISchema | undefined, paths: string[]) {
   if (value === null) {
     return value;
   }
@@ -65,7 +66,7 @@ function plainToInstance(value: unknown, metaType: MixedType | null, schema: ISc
 
   let realMetaType: MixedType = metaType;
   if (!metaType && !schema) {
-    logger.warn(`The type for variable '${path}' must exist, otherwise the value will return 'undefined'.`);
+    logger.warn(`The type for variable '${paths.join(".")}' must exist, otherwise the value will return 'undefined'.`);
     return undefined;
   }
   if (!metaType || (metaType === Object && schema)) {
@@ -79,17 +80,17 @@ function plainToInstance(value: unknown, metaType: MixedType | null, schema: ISc
   if (realMetaType === Object) {
     if (!schema) {
       logger.warn(
-        `The type for variable '${path}' must be explicit, don't use union type or intersection type, please use primitive types or class.`,
+        `The type for variable '${paths.join(".")}' must be explicit, don't use union type or intersection type, please use primitive types or class.`,
       );
       return undefined;
     }
-    return createInstance(value, Object, schema, path);
+    return createInstance(value, Object, schema, paths);
   }
   if (realMetaType === Array) {
     const _value = Array.isArray(value) ? value : [value];
     const _schema = unwrap(schema);
     const _type = getType(_schema);
-    return _value.map((item, idx) => plainToInstance(item, _type, _schema, `${path}.[${idx}]`));
+    return _value.map((item, idx) => plainToInstance(item, _type, _schema, paths.concat(idx.toString())));
   }
   if (realMetaType === String) {
     return String(value).trim();
@@ -123,7 +124,9 @@ function plainToInstance(value: unknown, metaType: MixedType | null, schema: ISc
     try {
       return BigInt(value as string | number);
     } catch (_error) {
-      logger.warn(`The value for variable '${path}' cannot be converted to BigInt, please check the schema.`);
+      logger.warn(
+        `The value for variable '${paths.join(".")}' cannot be converted to BigInt, please check the schema.`,
+      );
       return undefined;
     }
   }
@@ -131,14 +134,14 @@ function plainToInstance(value: unknown, metaType: MixedType | null, schema: ISc
   if (realMetaType && value instanceof realMetaType) {
     return value;
   }
-  return createInstance(value, realMetaType as Type, schema, path);
+  return createInstance(value, realMetaType as Type, schema, paths);
 }
 
 function createInstance<T extends object>(
   value: unknown,
   metaType: Type<T>,
   schema: ISchema | undefined,
-  path: string,
+  paths: string[],
 ): T {
   if (!metaType) {
     return parse(schema as ISchema, value) as T;
@@ -155,7 +158,7 @@ function createInstance<T extends object>(
     Reflect.set(
       instance,
       property.name,
-      plainToInstance(value[property.name], null, property.schema, `${path}.${property.name}`),
+      plainToInstance(value[property.name], null, property.schema, paths.concat(property.name)),
     );
   });
   return instance;

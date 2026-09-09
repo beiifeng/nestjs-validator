@@ -1,9 +1,22 @@
-import type { IPlugin, IPluginCtx, IPluginRt } from "@beiifeng/nestjs-validator";
+import {
+  type IPlugin,
+  type IPluginCtx,
+  type IPluginRt,
+  ResolveModelNamePlugin,
+  validator,
+} from "@beiifeng/nestjs-validator";
 import { ApiProperty, ApiSchema } from "@nestjs/swagger";
+
+const PLUGIN_NAME = "nestjs-validator-plugin-swagger";
 
 export class NestjsValidatorPluginSwagger implements IPlugin {
   readonly type = "onModelApply";
-  readonly name = "NestjsValidatorPluginSwagger";
+  readonly name = PLUGIN_NAME;
+
+  constructor() {
+    validator.addPlugin(new ResolveModelNamePlugin());
+  }
+
   apply({ adapter, schema, getType }: IPluginRt, ctx: IPluginCtx): IPluginCtx {
     const { target, targetName, name, description } = ctx;
     if (targetName !== name || description) {

@@ -159,24 +159,23 @@ export interface IAdapter<S> {
 
   /**
    * Parse a plain object into a value that matches the schema.
-   * This is useful for converting data from external sources (like JSON) into the expected types defined by the schema.
    *
-   * TODO: throw Error
+   * Throw Error if the value does not match the schema.
    */
   parse(schema: S, plain: unknown): unknown;
 
   /**
    * Check if a value matches the schema.
    *
-   * TODO: throw Error
+   * Throw Error if the value does not match the schema.
    */
   check(schema: S, value: unknown): boolean;
 }
 export interface IModelZ<T> {
   readonly $schema: IModelSchema;
+  initialize: (plain: Record<string, unknown>) => IModelZ<T>;
 
   new (): T;
-  new (plain: Partial<T>): T;
 }
 export interface ModelOptions {
   name?: string;

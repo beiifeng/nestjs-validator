@@ -1,6 +1,6 @@
 import type { IPlugin, IPluginCtx, IPluginRt } from "../interface.js";
 
-const PLUGIN_NAME = "Preset:ResolveModelNamePlugin";
+const PLUGIN_NAME = "resolve-model-name-plugin";
 
 export class ResolveModelNamePlugin implements IPlugin {
   static pluginName: string = PLUGIN_NAME;

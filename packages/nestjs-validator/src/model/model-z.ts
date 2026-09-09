@@ -1,19 +1,18 @@
-import { getAdapter, getType, parse, registerSchema } from "../helpers.js";
+import { getAdapter, getType, registerSchema } from "../helpers.js";
 import { hooks } from "../hooks/index.js";
 import type { IModelSchema, IModelZ } from "../interface.js";
 
 export function ModelZ<M extends IModelSchema>(schema: M): IModelZ<unknown> {
   class InnerModel {
-    constructor(plain?: Record<string, unknown>) {
-      if (plain) {
-        const parsed = parse(schema, plain);
-        this.initialize(parsed as Record<string, unknown>);
-      }
-    }
+    static initialize: (plain: Record<string, unknown>) => InnerModel;
     initialize(plain: Record<string, unknown>) {
       Object.assign(this, plain);
+      return this;
     }
   }
+  InnerModel.initialize = function initialize(plain: Record<string, unknown>) {
+    return new this().initialize(plain);
+  };
   const adapter = getAdapter(schema);
   const TModel = (hooks.call(
     "onModelZ",
