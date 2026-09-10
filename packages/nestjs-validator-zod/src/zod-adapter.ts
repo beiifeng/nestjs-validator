@@ -10,6 +10,7 @@ import {
   toJSONSchema,
   ZodArray,
   ZodCatch,
+  ZodDate,
   ZodDefault,
   ZodEnum,
   ZodExactOptional,
@@ -17,11 +18,13 @@ import {
   ZodNonOptional,
   ZodNull,
   ZodNullable,
+  ZodNumber,
   ZodObject,
   ZodOptional,
   ZodPrefault,
   ZodPromise,
   ZodReadonly,
+  ZodString,
   ZodSuccess,
   ZodType,
   ZodUndefined,
@@ -54,6 +57,14 @@ function unwrapZod(schema: ZodType): ZodType {
   }
   return current;
 }
+
+const FORMAT_MAP = {
+  guid: "uuid",
+  url: "uri",
+  datetime: "date-time",
+  json_string: "json-string",
+  regex: "", // do not set
+} as const;
 
 export type ZodAdapterOptions = {
   keyOfIdentifier?: string;
@@ -155,6 +166,75 @@ export class ZodAdapter implements IAdapter<ZodType> {
         example: _schema.meta()?.example,
         examples: _schema.meta()?.examples as unknown[] | undefined,
       };
+      const _unwrapped = unwrapZod(_schema);
+      if (_unwrapped instanceof ZodString) {
+        if (_unwrapped.minLength !== null) {
+          properties[name].minLength = _unwrapped.minLength;
+        }
+        if (_unwrapped.maxLength !== null) {
+          properties[name].maxLength = _unwrapped.maxLength;
+        }
+        if (_unwrapped.format) {
+          properties[name].format = FORMAT_MAP[_unwrapped.format] ?? _unwrapped.format;
+        }
+        if (_unwrapped._zod.bag.patterns && _unwrapped._zod.bag.patterns.size > 0) {
+          if (_unwrapped._zod.bag.patterns.size === 1) {
+            properties[name].pattern = _unwrapped._zod.bag.patterns[0].source;
+          } else {
+            properties[name].allOf = [..._unwrapped._zod.bag.patterns].map((p: RegExp) => ({
+              type: "string",
+              pattern: p.source,
+            }));
+          }
+        }
+      } else if (_unwrapped instanceof ZodNumber) {
+        const { exclusiveMinimum, exclusiveMaximum, minimum, maximum } = _unwrapped._zod.bag;
+        if (_unwrapped.format) {
+          properties[name].format = _unwrapped.format;
+        }
+        if (typeof minimum === "number" && typeof exclusiveMinimum === "number") {
+          if (exclusiveMinimum >= minimum) {
+            properties[name].minimum = exclusiveMinimum;
+            properties[name].exclusiveMinimum = true;
+          } else {
+            properties[name].minimum = minimum;
+          }
+        } else if (typeof minimum === "number") {
+          properties[name].minimum = minimum;
+        } else if (typeof exclusiveMinimum === "number") {
+          properties[name].minimum = exclusiveMinimum;
+          properties[name].exclusiveMinimum = true;
+        }
+        if (typeof maximum === "number" && typeof exclusiveMaximum === "number") {
+          if (exclusiveMaximum <= maximum) {
+            properties[name].maximum = exclusiveMaximum;
+            properties[name].exclusiveMaximum = true;
+          } else {
+            properties[name].maximum = maximum;
+          }
+        } else if (typeof maximum === "number") {
+          properties[name].maximum = maximum;
+        } else if (typeof exclusiveMaximum === "number") {
+          properties[name].maximum = exclusiveMaximum;
+          properties[name].exclusiveMaximum = true;
+        }
+      } else if (_unwrapped instanceof ZodArray) {
+        const { minimum, maximum } = _unwrapped._zod.bag;
+        if (typeof minimum === "number") {
+          properties[name].minItems = minimum;
+        }
+        if (typeof maximum === "number") {
+          properties[name].maxItems = maximum;
+        }
+      } else if (_unwrapped instanceof ZodDate) {
+        const { minimum, maximum } = _unwrapped._zod.bag;
+        if (typeof minimum === "object" && minimum instanceof Date && !Number.isNaN(minimum.getTime())) {
+          properties[name].minimum = minimum.getTime();
+        }
+        if (typeof maximum === "object" && maximum instanceof Date && !Number.isNaN(maximum.getTime())) {
+          properties[name].maximum = maximum.getTime();
+        }
+      }
     }
 
     return properties;

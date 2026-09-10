@@ -20,6 +20,18 @@ export interface IProperty<S> {
   description?: string;
   example?: unknown;
   examples?: unknown[] | Record<string, unknown>;
+  minLength?: number; // For string types
+  maxLength?: number; // For string types
+  format?: string; // For string types and number types
+  pattern?: string; // For string types
+  allOf?: unknown[];
+  minimum?: number; // For number types
+  maximum?: number; // For number types
+  exclusiveMinimum?: boolean; // For number types
+  exclusiveMaximum?: boolean; // For number types
+  minItems?: number; // For array types
+  maxItems?: number; // For array types
+  // [key: string]: unknown;
 }
 export interface IAdapter<S> {
   readonly name: string;

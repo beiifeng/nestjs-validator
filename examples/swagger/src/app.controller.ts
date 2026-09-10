@@ -1,7 +1,7 @@
 import { Bind } from "@beiifeng/nestjs-validator";
 import { Body, Controller, Get, Logger, Param, Post, Query } from "@nestjs/common";
 import z from "zod";
-import { Role, User, Order } from "./app.dto";
+import { Order, Role, User } from "./app.dto";
 
 @Controller("app")
 export class AppController {
@@ -11,6 +11,7 @@ export class AppController {
   testBody(@Body(Bind) data: User): string {
     this.logger.log(`Received data: ${JSON.stringify(data)}`);
     this.logger.log(`User instance: ${data instanceof User}`);
+    this.logger.log(`User created at: ${data.createdAt instanceof Date}`);
     if (data.roles?.length) {
       this.logger.log(`User roles instance: ${data.roles[0] instanceof Role}`);
     }
@@ -38,6 +39,7 @@ export class AppController {
   testOrder(@Body(Bind) order: Order): string {
     this.logger.log(`Received order: ${JSON.stringify(order)}`);
     this.logger.log(`Order instance: ${order instanceof Order}`);
+    this.logger.log(`Order created at: ${typeof order.createdAt}`);
     return "ok";
   }
 }

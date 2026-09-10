@@ -22,11 +22,13 @@ import {
   IsUnion,
   NonNullable,
   type Static,
-  type TFormat,
+  type TArrayOptions,
+  type TNumberOptions,
   type TObject,
   type TProperties,
   type TSchema,
   type TSchemaOptions,
+  type TStringOptions,
 } from "typebox";
 import { ParseError } from "typebox/schema";
 import { Settings } from "typebox/system";
@@ -45,7 +47,29 @@ declare module "typebox" {
   }
 
   export interface TString {
-    format?: TFormat;
+    format?: TStringOptions["format"];
+    minLength?: TStringOptions["minLength"];
+    maxLength?: TStringOptions["maxLength"];
+    pattern?: TStringOptions["pattern"];
+  }
+
+  export interface TNumber {
+    minimum?: TNumberOptions["minimum"];
+    maximum?: TNumberOptions["maximum"];
+    exclusiveMinimum?: TNumberOptions["exclusiveMinimum"];
+    exclusiveMaximum?: TNumberOptions["exclusiveMaximum"];
+  }
+
+  export interface TInteger {
+    minimum?: TNumberOptions["minimum"];
+    maximum?: TNumberOptions["maximum"];
+    exclusiveMinimum?: TNumberOptions["exclusiveMinimum"];
+    exclusiveMaximum?: TNumberOptions["exclusiveMaximum"];
+  }
+
+  export interface TArray {
+    minItems?: TArrayOptions["minItems"];
+    maxItems?: TArrayOptions["maxItems"];
   }
 }
 
@@ -105,9 +129,9 @@ export class TypeBoxAdapter implements IAdapter<TSchema> {
       return Boolean;
     }
     if (IsString(schema)) {
-      if (schema.format === "date-time" || schema.format === "date" || schema.format === "time") {
-        return Date;
-      }
+      // if (schema.format === "date-time" || schema.format === "date" || schema.format === "time") {
+      //   return Date;
+      // }
       return String;
     }
     if (IsArray(schema)) {
@@ -142,6 +166,34 @@ export class TypeBoxAdapter implements IAdapter<TSchema> {
         example: (_schema as TSchemaOptions).example,
         examples: (_schema as TSchemaOptions).examples as unknown[] | undefined,
       };
+      if (IsString(_schema)) {
+        if (typeof _schema.minLength === "number") {
+          properties[name].minLength = _schema.minLength;
+        }
+        if (typeof _schema.maxLength === "number") {
+          properties[name].maxLength = _schema.maxLength;
+        }
+        if (_schema.format) {
+          properties[name].format = _schema.format;
+        }
+        if (typeof _schema.pattern === "string" || _schema.pattern instanceof RegExp) {
+          properties[name].pattern = typeof _schema.pattern === "string" ? _schema.pattern : _schema.pattern.source;
+        }
+      } else if (IsNumber(_schema) || IsInteger(_schema)) {
+        if (typeof _schema.minimum === "number") {
+          properties[name].minimum = _schema.minimum;
+        }
+        if (typeof _schema.maximum === "number") {
+          properties[name].maximum = _schema.maximum;
+        }
+      } else if (IsArray(_schema)) {
+        if (typeof _schema.minItems === "number") {
+          properties[name].minItems = _schema.minItems;
+        }
+        if (typeof _schema.maxItems === "number") {
+          properties[name].maxItems = _schema.maxItems;
+        }
+      }
     });
 
     return properties;
