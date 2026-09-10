@@ -48,8 +48,8 @@ function transformValue(plainValue: unknown, metadata: ArgumentMetadata, schema:
   if (schema) {
     const error = check(schema, instance);
     if (error) {
+      error.path = path.concat(error.path);
       logger.warn(`The value for variable '${error.path.join(".")}' is invalid, message: ${error.message}.`);
-      Error.captureStackTrace(error, transformValue);
       throw error;
     }
   }
@@ -146,7 +146,13 @@ function createInstance<T extends object>(
     return null;
   }
   if (!metaType) {
-    return parse(schema as ISchema, value) as T;
+    const [error, parsed] = parse<T>(schema as ISchema, value);
+    if (error) {
+      error.path = path.concat(error.path);
+      logger.warn(`The value for variable '${error.path.join(".")}' is invalid, message: ${error.message}.`);
+      throw error;
+    }
+    return parsed;
   }
   const instance = new metaType() as T;
   if (!schema) {

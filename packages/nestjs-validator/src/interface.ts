@@ -163,7 +163,7 @@ export interface IAdapter<S> {
    *
    * @throws { NotMatchError } If the value does not match the schema, it should throw a `NotMatchError` with details about the mismatch.
    */
-  parse(schema: S, plain: unknown): unknown;
+  parse<T = unknown>(schema: S, plain: unknown): [NotMatchError, null] | [null, T];
 
   /**
    * Check if a value matches the schema. Safe mode, does not throw an error, returns a `NotMatchError` if it does not match, otherwise returns null.

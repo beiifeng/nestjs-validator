@@ -166,16 +166,18 @@ export class TypeBoxAdapter implements IAdapter<TSchema> {
     return schema;
   }
 
-  parse(schema: TSchema, plain: unknown): unknown {
+  parse<T = unknown>(schema: TSchema, plain: unknown): [NotMatchError, null] | [null, T] {
     Settings.Set({ maxErrors: 1 });
     try {
-      return validators.getOrInsert(schema).Parse(plain);
-    } catch (error) {
-      if (error instanceof ParseError) {
-        const firstError = error.errors[0];
-        throw new NotMatchError(firstError.message, firstError.instancePath.split("/").filter(Boolean));
+      const data = validators.getOrInsert(schema).Parse(plain) as T;
+      return [null, data];
+    } catch (e) {
+      if (e instanceof ParseError) {
+        const firstError = e.errors[0];
+        const error = new NotMatchError(firstError.message, firstError.instancePath.split("/").filter(Boolean));
+        return [error, null];
       }
-      throw error;
+      throw e;
     }
   }
 
@@ -184,12 +186,12 @@ export class TypeBoxAdapter implements IAdapter<TSchema> {
     try {
       validators.getOrInsert(schema).Parse(value);
       return null;
-    } catch (error) {
-      if (error instanceof ParseError) {
-        const firstError = error.errors[0];
+    } catch (e) {
+      if (e instanceof ParseError) {
+        const firstError = e.errors[0];
         return new NotMatchError(firstError.message, firstError.instancePath.split("/").filter(Boolean));
       }
-      throw error;
+      throw e;
     }
   }
 }

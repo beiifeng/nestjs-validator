@@ -187,16 +187,17 @@ export class ZodAdapter implements IAdapter<ZodType> {
     });
   }
 
-  parse(schema: ZodType, plain: unknown): unknown {
+  parse<T = unknown>(schema: ZodType, plain: unknown): [NotMatchError, null] | [null, T] {
     const result = schema.safeParse(plain);
     if (result.success) {
-      return result.data;
+      return [null, result.data as T];
     }
     const firstError = result.error.issues[0];
-    throw new NotMatchError(
+    const error = new NotMatchError(
       firstError.message,
       firstError.path.map((p) => (typeof p === "string" ? p : String(p))),
     );
+    return [error, null];
   }
 
   check(schema: ZodType, value: unknown): NotMatchError | null {

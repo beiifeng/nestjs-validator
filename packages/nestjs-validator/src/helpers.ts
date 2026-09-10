@@ -1,4 +1,5 @@
 import type { Type } from "@nestjs/common";
+import type { NotMatchError } from "./error/index.js";
 import type { IAdapter, IModelSchema, IModelZ, IProperty, ISchema, MixedType } from "./interface.js";
 import { adapters, models } from "./store/index.js";
 
@@ -17,18 +18,18 @@ export function getAdapter(schema: ISchema): IAdapter<ISchema> {
   throw new Error("No validator found for the given schema");
 }
 
-export function parse(schema: ISchema, plain: unknown): ReturnType<IAdapter<ISchema>["parse"]> {
+export function parse<T = unknown>(schema: ISchema, plain: unknown): [NotMatchError, null] | [null, T] {
   const eCtor = Error;
   const { stackTraceLimit } = eCtor;
   eCtor.stackTraceLimit = 0;
   try {
-    return getAdapter(schema).parse(schema, plain);
+    return getAdapter(schema).parse<T>(schema, plain);
   } finally {
     eCtor.stackTraceLimit = stackTraceLimit;
   }
 }
 
-export function check(schema: ISchema, value: unknown): ReturnType<IAdapter<ISchema>["check"]> {
+export function check(schema: ISchema, value: unknown): NotMatchError | null {
   const eCtor = Error;
   const { stackTraceLimit } = eCtor;
   eCtor.stackTraceLimit = 0;
