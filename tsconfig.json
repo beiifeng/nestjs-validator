@@ -3,6 +3,7 @@
     "module": "esnext",
     "target": "es2023",
     "lib": ["esnext"],
+    "types": ["node"],
 
     "sourceMap": false,
     "declaration": true,
@@ -12,7 +13,7 @@
     "strict": true,
     "noImplicitAny": false,
     "skipLibCheck": true,
-    "strictNullChecks": false,
+    "strictNullChecks": true,
 
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,

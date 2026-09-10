@@ -1,4 +1,11 @@
-import { validator, type IAdapter, type IModelZ, type IProperty, type ModelOptions } from "@beiifeng/nestjs-validator";
+import {
+  NotMatchError,
+  validator,
+  type IAdapter,
+  type IModelZ,
+  type IProperty,
+  type ModelOptions,
+} from "@beiifeng/nestjs-validator";
 import { Logger } from "@nestjs/common";
 import {
   IsArray,
@@ -21,6 +28,8 @@ import {
   type TSchema,
   type TSchemaOptions,
 } from "typebox";
+import { ParseError } from "typebox/schema";
+import { Settings } from "typebox/system";
 import { TypeBoxSchemaPlugin } from "./plugin.js";
 import { validators } from "./store.js";
 
@@ -158,10 +167,29 @@ export class TypeBoxAdapter implements IAdapter<TSchema> {
   }
 
   parse(schema: TSchema, plain: unknown): unknown {
-    return validators.getOrInsert(schema).Parse(plain);
+    Settings.Set({ maxErrors: 1 });
+    try {
+      return validators.getOrInsert(schema).Parse(plain);
+    } catch (error) {
+      if (error instanceof ParseError) {
+        const firstError = error.errors[0];
+        throw new NotMatchError(firstError.message, firstError.instancePath.split("/").filter(Boolean));
+      }
+      throw error;
+    }
   }
 
-  check(schema: TSchema, value: unknown): boolean {
-    return validators.getOrInsert(schema).Check(value);
+  check(schema: TSchema, value: unknown): NotMatchError | null {
+    Settings.Set({ maxErrors: 1 });
+    try {
+      validators.getOrInsert(schema).Parse(value);
+      return null;
+    } catch (error) {
+      if (error instanceof ParseError) {
+        const firstError = error.errors[0];
+        return new NotMatchError(firstError.message, firstError.instancePath.split("/").filter(Boolean));
+      }
+      throw error;
+    }
   }
 }

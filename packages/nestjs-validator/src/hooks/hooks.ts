@@ -11,8 +11,8 @@ class Hooks {
     if (!this.#hookTypes.includes(plugin.type)) {
       throw new Error(`Invalid plugin type: ${plugin.type}`);
     }
-    if (this.#hooks.get(plugin.type).every((p) => p.name !== plugin.name)) {
-      this.#hooks.get(plugin.type).push(plugin);
+    if (this.#hooks.get(plugin.type)?.every((p) => p.name !== plugin.name)) {
+      this.#hooks.get(plugin.type)?.push(plugin);
     }
   }
 
@@ -20,7 +20,7 @@ class Hooks {
   call(type: Exclude<PluginType, "onModelInit">, rt: IPluginRt, ctx: IPluginCtx): IPluginCtx;
   call(type: PluginType, rt: IPluginRt, ctx?: IPluginCtx): IPluginCtx | undefined {
     const plugins = this.#hooks.get(type);
-    if (!plugins.length) {
+    if (!plugins?.length) {
       return ctx;
     }
     return plugins.reduce((prevCtx, plugin) => plugin.apply(rt, prevCtx) || prevCtx, ctx);

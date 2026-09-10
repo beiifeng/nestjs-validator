@@ -13,7 +13,10 @@ export class ResolveModelNamePlugin implements IPlugin {
     this.#definedModels = new Set<string>();
     this.#splitter = splitter ?? "_";
   }
-  apply(_rt: IPluginRt, ctx: IPluginCtx): IPluginCtx {
+  apply(_rt: IPluginRt, ctx?: IPluginCtx): IPluginCtx | undefined {
+    if (!ctx) {
+      return undefined;
+    }
     let { name } = ctx;
     if (this.#definedModels.has(name)) {
       let count = 1;

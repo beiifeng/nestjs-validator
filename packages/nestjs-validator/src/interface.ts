@@ -1,4 +1,5 @@
 import type { Type } from "@nestjs/common";
+import type { NotMatchError } from "./error";
 
 export type ISchema = unknown;
 export type IModelSchema = unknown;
@@ -134,7 +135,7 @@ export interface IAdapter<S> {
    * This method returns a record of property names to their corresponding Property definitions.
    * If the schema does not represent a model, it returns null.
    */
-  getProperties(schema: S): Record<string, IProperty<S> | null>;
+  getProperties(schema: S): Record<string, IProperty<S>> | null;
 
   /**
    * Get the default value for a schema if it has one.
@@ -160,16 +161,14 @@ export interface IAdapter<S> {
   /**
    * Parse a plain object into a value that matches the schema.
    *
-   * Throw Error if the value does not match the schema.
+   * @throws { NotMatchError } If the value does not match the schema, it should throw a `NotMatchError` with details about the mismatch.
    */
   parse(schema: S, plain: unknown): unknown;
 
   /**
-   * Check if a value matches the schema.
-   *
-   * Throw Error if the value does not match the schema.
+   * Check if a value matches the schema. Safe mode, does not throw an error, returns a `NotMatchError` if it does not match, otherwise returns null.
    */
-  check(schema: S, value: unknown): boolean;
+  check(schema: S, value: unknown): NotMatchError | null;
 }
 export interface IModelZ<T> {
   readonly $schema: IModelSchema;
@@ -205,6 +204,5 @@ export interface IPlugin {
   readonly type: PluginType;
   readonly name: string;
 
-  // biome-ignore lint/suspicious/noConfusingVoidType: Void is used to indicate that the plugin does not return a context, which is valid for certain plugin types.
-  apply: (rt: IPluginRt, ctx: IPluginCtx) => IPluginCtx | void;
+  apply: (rt: IPluginRt, ctx?: IPluginCtx) => IPluginCtx | undefined;
 }

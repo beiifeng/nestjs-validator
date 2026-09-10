@@ -17,12 +17,18 @@ export class NestjsValidatorPluginSwagger implements IPlugin {
     validator.addPlugin(new ResolveModelNamePlugin());
   }
 
-  apply({ adapter, schema, getType }: IPluginRt, ctx: IPluginCtx): IPluginCtx {
+  apply({ adapter, schema, getType }: IPluginRt, ctx?: IPluginCtx): IPluginCtx | undefined {
+    if (!ctx) {
+      return undefined;
+    }
     const { target, targetName, name, description } = ctx;
     if (targetName !== name || description) {
       ApiSchema({ name, description })(target);
     }
     const properties = adapter.getProperties(schema);
+    if (!properties) {
+      return ctx;
+    }
     Object.keys(properties).forEach((key) => {
       const property = properties[key];
       const { name, schema, required, description, example, examples } = property;

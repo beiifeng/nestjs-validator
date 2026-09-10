@@ -18,18 +18,32 @@ export function getAdapter(schema: ISchema): IAdapter<ISchema> {
 }
 
 export function parse(schema: ISchema, plain: unknown): ReturnType<IAdapter<ISchema>["parse"]> {
-  return getAdapter(schema).parse(schema, plain);
+  const eCtor = Error;
+  const { stackTraceLimit } = eCtor;
+  eCtor.stackTraceLimit = 0;
+  try {
+    return getAdapter(schema).parse(schema, plain);
+  } finally {
+    eCtor.stackTraceLimit = stackTraceLimit;
+  }
 }
 
 export function check(schema: ISchema, value: unknown): ReturnType<IAdapter<ISchema>["check"]> {
-  return getAdapter(schema).check(schema, value);
+  const eCtor = Error;
+  const { stackTraceLimit } = eCtor;
+  eCtor.stackTraceLimit = 0;
+  try {
+    return getAdapter(schema).check(schema, value);
+  } finally {
+    eCtor.stackTraceLimit = stackTraceLimit;
+  }
 }
 
 export function getIdentifier(schema: ISchema): ReturnType<IAdapter<ISchema>["getIdentifier"]> {
   return getAdapter(schema).getIdentifier(schema);
 }
 
-export function getProperties(schema: ISchema): Record<string, IProperty<ISchema> | null> {
+export function getProperties(schema: ISchema): Record<string, IProperty<ISchema>> | null {
   return getAdapter(schema).getProperties(schema);
 }
 
@@ -70,7 +84,7 @@ export function registerSchema(model: Type, schema: ISchema): void {
   });
 }
 
-export function getSchema(model: Type): IModelSchema | null {
+export function getSchema(model: Type | undefined): IModelSchema | null {
   if (!model) {
     return null;
   }

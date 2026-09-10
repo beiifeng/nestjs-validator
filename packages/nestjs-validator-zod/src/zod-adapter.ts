@@ -1,4 +1,10 @@
-import type { IAdapter, IModelZ, IProperty, ModelOptions } from "@beiifeng/nestjs-validator";
+import {
+  NotMatchError,
+  type IAdapter,
+  type IModelZ,
+  type IProperty,
+  type ModelOptions,
+} from "@beiifeng/nestjs-validator";
 import { Logger } from "@nestjs/common";
 import {
   toJSONSchema,
@@ -182,10 +188,26 @@ export class ZodAdapter implements IAdapter<ZodType> {
   }
 
   parse(schema: ZodType, plain: unknown): unknown {
-    return schema.parse(plain);
+    const result = schema.safeParse(plain);
+    if (result.success) {
+      return result.data;
+    }
+    const firstError = result.error.issues[0];
+    throw new NotMatchError(
+      firstError.message,
+      firstError.path.map((p) => (typeof p === "string" ? p : String(p))),
+    );
   }
 
-  check(schema: ZodType, value: unknown): boolean {
-    return schema.safeParse(value).success;
+  check(schema: ZodType, value: unknown): NotMatchError | null {
+    const result = schema.safeParse(value);
+    if (result.success) {
+      return null;
+    }
+    const firstError = result.error.issues[0];
+    return new NotMatchError(
+      firstError.message,
+      firstError.path.map((p) => (typeof p === "string" ? p : String(p))),
+    );
   }
 }

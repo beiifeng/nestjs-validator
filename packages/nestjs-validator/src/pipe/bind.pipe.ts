@@ -1,4 +1,4 @@
-import { BadRequestException, Logger, type ArgumentMetadata, type PipeTransform, type Type } from "@nestjs/common";
+import { Logger, type ArgumentMetadata, type PipeTransform, type Type } from "@nestjs/common";
 import { check, getDefaultValue, getProperties, getSchema, getType, isArray, parse, unwrap } from "../helpers.js";
 import type { IModelSchema, ISchema, MixedType } from "../interface.js";
 
@@ -43,19 +43,20 @@ function innerTransform(this: BindPipe, value: unknown, metadata: ArgumentMetada
 function transformValue(plainValue: unknown, metadata: ArgumentMetadata, schema: ISchema | undefined) {
   const { metatype, type, data = "" } = metadata;
   schema = schema || getSchema(metatype);
-  const paths = data ? [type, data] : [type];
-  const instance = plainToInstance(plainValue, metatype, schema, paths);
+  const path = data ? [type, data] : [type];
+  const instance = plainToInstance(plainValue, metatype || null, schema, path);
   if (schema) {
-    const valid = check(schema, instance);
-    if (!valid) {
-      logger.warn(`The value for variable '${type}:${data}' is invalid, please check the schema.`);
-      throw new BadRequestException(`The value for variable '${paths.join(".")}' is invalid, please check the schema.`);
+    const error = check(schema, instance);
+    if (error) {
+      logger.warn(`The value for variable '${error.path.join(".")}' is invalid, message: ${error.message}.`);
+      Error.captureStackTrace(error, transformValue);
+      throw error;
     }
   }
   return instance;
 }
 
-function plainToInstance(value: unknown, metaType: MixedType | null, schema: ISchema | undefined, paths: string[]) {
+function plainToInstance(value: unknown, metaType: MixedType | null, schema: ISchema | undefined, path: string[]) {
   if (value === null) {
     return value;
   }
@@ -64,9 +65,9 @@ function plainToInstance(value: unknown, metaType: MixedType | null, schema: ISc
     value = getDefaultValue(schema);
   }
 
-  let realMetaType: MixedType = metaType;
+  let realMetaType: MixedType | null = metaType;
   if (!metaType && !schema) {
-    logger.warn(`The type for variable '${paths.join(".")}' must exist, otherwise the value will return 'undefined'.`);
+    logger.warn(`The type for variable '${path.join(".")}' must exist, otherwise the value will return 'undefined'.`);
     return undefined;
   }
   if (!metaType || (metaType === Object && schema)) {
@@ -80,17 +81,17 @@ function plainToInstance(value: unknown, metaType: MixedType | null, schema: ISc
   if (realMetaType === Object) {
     if (!schema) {
       logger.warn(
-        `The type for variable '${paths.join(".")}' must be explicit, don't use union type or intersection type, please use primitive types or class.`,
+        `The type for variable '${path.join(".")}' must be explicit, don't use union type or intersection type, please use primitive types or class.`,
       );
       return undefined;
     }
-    return createInstance(value, Object, schema, paths);
+    return createInstance(value, Object, schema, path);
   }
   if (realMetaType === Array) {
     const _value = Array.isArray(value) ? value : [value];
     const _schema = unwrap(schema);
     const _type = getType(_schema);
-    return _value.map((item, idx) => plainToInstance(item, _type, _schema, paths.concat(idx.toString())));
+    return _value.map((item, idx) => plainToInstance(item, _type, _schema, path.concat(idx.toString())));
   }
   if (realMetaType === String) {
     return String(value).trim();
@@ -124,9 +125,7 @@ function plainToInstance(value: unknown, metaType: MixedType | null, schema: ISc
     try {
       return BigInt(value as string | number);
     } catch (_error) {
-      logger.warn(
-        `The value for variable '${paths.join(".")}' cannot be converted to BigInt, please check the schema.`,
-      );
+      logger.warn(`The value for variable '${path.join(".")}' cannot be converted to BigInt, please check the schema.`);
       return undefined;
     }
   }
@@ -134,20 +133,26 @@ function plainToInstance(value: unknown, metaType: MixedType | null, schema: ISc
   if (realMetaType && value instanceof realMetaType) {
     return value;
   }
-  return createInstance(value, realMetaType as Type, schema, paths);
+  return createInstance(value, realMetaType as Type, schema, path);
 }
 
 function createInstance<T extends object>(
   value: unknown,
-  metaType: Type<T>,
+  metaType: Type<T> | undefined,
   schema: ISchema | undefined,
-  paths: string[],
-): T {
+  path: string[],
+): T | null {
+  if (value === null) {
+    return null;
+  }
   if (!metaType) {
     return parse(schema as ISchema, value) as T;
   }
   const instance = new metaType() as T;
   if (!schema) {
+    return instance;
+  }
+  if (typeof value !== "object") {
     return instance;
   }
   const properties = getProperties(schema as IModelSchema);
@@ -158,7 +163,7 @@ function createInstance<T extends object>(
     Reflect.set(
       instance,
       property.name,
-      plainToInstance(value[property.name], null, property.schema, paths.concat(property.name)),
+      plainToInstance(value[property.name], null, property.schema, path.concat(property.name)),
     );
   });
   return instance;
