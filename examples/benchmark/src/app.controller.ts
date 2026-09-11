@@ -7,12 +7,12 @@ export class AppController {
   logger: Logger = new Logger(AppController.name);
 
   @Post("zod")
-  testZod(@Body(Bind) data: ZUser): string {
-    return JSON.stringify(data);
+  testZod(@Body(Bind) _data: ZUser): number {
+    return process.memoryUsage().heapUsed;
   }
 
   @Post("typebox")
-  testTypeBox(@Body(Bind) data: TUser): string {
-    return JSON.stringify(data);
+  testTypeBox(@Body(Bind) _data: TUser): number {
+    return process.memoryUsage().heapUsed;
   }
 }
