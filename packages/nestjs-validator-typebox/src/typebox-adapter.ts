@@ -1,9 +1,18 @@
-import { validator, type IAdapter, type IModelZ, type IProperty, type ModelOptions } from "@beiifeng/nestjs-validator";
+import {
+  CONSTANTS,
+  NotMatchError,
+  validator,
+  type IAdapter,
+  type IModelZ,
+  type IProperty,
+  type ModelOptions,
+} from "@beiifeng/nestjs-validator";
 import { Logger } from "@nestjs/common";
 import {
   IsArray,
   IsBigInt,
   IsBoolean,
+  IsCodec,
   IsEnum,
   IsInteger,
   IsNull,
@@ -14,18 +23,22 @@ import {
   IsUndefined,
   IsUnion,
   NonNullable,
-  type Static,
-  type TFormat,
+  type StaticDecode,
+  type TArrayOptions,
+  type TNumberOptions,
   type TObject,
   type TProperties,
   type TSchema,
   type TSchemaOptions,
+  type TStringOptions,
 } from "typebox";
+import { ParseError } from "typebox/schema";
+import { Settings } from "typebox/system";
 import { TypeBoxSchemaPlugin } from "./plugin.js";
 import { validators } from "./store.js";
 
 declare module "@beiifeng/nestjs-validator" {
-  export function ModelZ<T extends TProperties>(schema: TObject<T>): IModelZ<Static<typeof schema>>;
+  export function ModelZ<T extends TProperties>(schema: TObject<T>): IModelZ<StaticDecode<typeof schema>>;
   export function Model<T extends TProperties>(schema: TObject<T>): ClassDecorator;
   export function Model<T extends TProperties>(schema: TObject<T>, options: ModelOptions): ClassDecorator;
 }
@@ -36,21 +49,56 @@ declare module "typebox" {
   }
 
   export interface TString {
-    format?: TFormat;
+    format?: TStringOptions["format"];
+    minLength?: TStringOptions["minLength"];
+    maxLength?: TStringOptions["maxLength"];
+    pattern?: TStringOptions["pattern"];
+  }
+
+  export interface TNumber {
+    minimum?: TNumberOptions["minimum"];
+    maximum?: TNumberOptions["maximum"];
+    exclusiveMinimum?: TNumberOptions["exclusiveMinimum"];
+    exclusiveMaximum?: TNumberOptions["exclusiveMaximum"];
+  }
+
+  export interface TInteger {
+    minimum?: TNumberOptions["minimum"];
+    maximum?: TNumberOptions["maximum"];
+    exclusiveMinimum?: TNumberOptions["exclusiveMinimum"];
+    exclusiveMaximum?: TNumberOptions["exclusiveMaximum"];
+  }
+
+  export interface TArray {
+    minItems?: TArrayOptions["minItems"];
+    maxItems?: TArrayOptions["maxItems"];
   }
 }
 
+const defaultIsDateTime = (schema: TSchema) => {
+  return IsString(schema) && schema[CONSTANTS.JSONLD_TYPE_KEY] === CONSTANTS.XSD_DATETIME;
+};
+const defaultIsBigInt = (schema: TSchema) => {
+  return IsString(schema) && schema[CONSTANTS.JSONLD_TYPE_KEY] === CONSTANTS.XSD_INTEGER;
+};
+
 export type TypeBoxAdapterOptions = {
   keyOfIdentifier?: string;
+  isDateTime?: (schema: TSchema) => boolean;
+  isBigInt?: (schema: TSchema) => boolean;
 };
 
 export class TypeBoxAdapter implements IAdapter<TSchema> {
   readonly name = "TypeBox";
   #keyOfIdentifier: string;
   #logger = new Logger(TypeBoxAdapter.name);
+  #isDateTime: (schema: TSchema) => boolean;
+  #isBigInt: (schema: TSchema) => boolean;
   constructor(options?: TypeBoxAdapterOptions) {
     validator.addPlugin(new TypeBoxSchemaPlugin());
     this.#keyOfIdentifier = options?.keyOfIdentifier || "$id";
+    this.#isDateTime = options?.isDateTime || defaultIsDateTime;
+    this.#isBigInt = options?.isBigInt || defaultIsBigInt;
   }
 
   isSchema(schema: TSchema): boolean {
@@ -86,6 +134,14 @@ export class TypeBoxAdapter implements IAdapter<TSchema> {
   }
 
   native(schema: TSchema): ReturnType<IAdapter<TSchema>["native"]> {
+    if (IsCodec(schema)) {
+      if (this.#isDateTime(schema)) {
+        return Date;
+      }
+      if (this.#isBigInt(schema)) {
+        return BigInt;
+      }
+    }
     if (IsBigInt(schema)) {
       return BigInt;
     }
@@ -96,9 +152,6 @@ export class TypeBoxAdapter implements IAdapter<TSchema> {
       return Boolean;
     }
     if (IsString(schema)) {
-      if (schema.format === "date-time" || schema.format === "date" || schema.format === "time") {
-        return Date;
-      }
       return String;
     }
     if (IsArray(schema)) {
@@ -133,6 +186,34 @@ export class TypeBoxAdapter implements IAdapter<TSchema> {
         example: (_schema as TSchemaOptions).example,
         examples: (_schema as TSchemaOptions).examples as unknown[] | undefined,
       };
+      if (IsString(_schema)) {
+        if (typeof _schema.minLength === "number") {
+          properties[name].minLength = _schema.minLength;
+        }
+        if (typeof _schema.maxLength === "number") {
+          properties[name].maxLength = _schema.maxLength;
+        }
+        if (_schema.format) {
+          properties[name].format = _schema.format;
+        }
+        if (typeof _schema.pattern === "string" || _schema.pattern instanceof RegExp) {
+          properties[name].pattern = typeof _schema.pattern === "string" ? _schema.pattern : _schema.pattern.source;
+        }
+      } else if (IsNumber(_schema) || IsInteger(_schema)) {
+        if (typeof _schema.minimum === "number") {
+          properties[name].minimum = _schema.minimum;
+        }
+        if (typeof _schema.maximum === "number") {
+          properties[name].maximum = _schema.maximum;
+        }
+      } else if (IsArray(_schema)) {
+        if (typeof _schema.minItems === "number") {
+          properties[name].minItems = _schema.minItems;
+        }
+        if (typeof _schema.maxItems === "number") {
+          properties[name].maxItems = _schema.maxItems;
+        }
+      }
     });
 
     return properties;
@@ -157,11 +238,32 @@ export class TypeBoxAdapter implements IAdapter<TSchema> {
     return schema;
   }
 
-  parse(schema: TSchema, plain: unknown): unknown {
-    return validators.getOrInsert(schema).Parse(plain);
+  parse<T = unknown>(schema: TSchema, plain: unknown): [NotMatchError, null] | [null, T] {
+    Settings.Set({ maxErrors: 1 });
+    try {
+      const data = validators.getOrInsert(schema).Parse(plain) as T;
+      return [null, data];
+    } catch (e) {
+      if (e instanceof ParseError) {
+        const firstError = e.errors[0];
+        const error = new NotMatchError(firstError.message, firstError.instancePath.split("/").filter(Boolean));
+        return [error, null];
+      }
+      throw e;
+    }
   }
 
-  check(schema: TSchema, value: unknown): boolean {
-    return validators.getOrInsert(schema).Check(value);
+  check(schema: TSchema, value: unknown): NotMatchError | null {
+    Settings.Set({ maxErrors: 1 });
+    try {
+      validators.getOrInsert(schema).Parse(value);
+      return null;
+    } catch (e) {
+      if (e instanceof ParseError) {
+        const firstError = e.errors[0];
+        return new NotMatchError(firstError.message, firstError.instancePath.split("/").filter(Boolean));
+      }
+      throw e;
+    }
   }
 }

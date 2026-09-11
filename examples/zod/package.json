@@ -2,7 +2,7 @@
   "name": "@example/zod",
   "version": "0.0.1",
   "description": "",
-  "author": "",
+  "author": "YiFei Wang <beiifeng@hotmail.com>",
   "private": true,
   "license": "MIT",
   "type": "commonjs",
@@ -12,7 +12,7 @@
     "start": "nest start",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
-    "start:prod": "node dist/main",
+    "start:prod": "node dist/main.js",
     "lint": "biome lint ."
   },
   "dependencies": {

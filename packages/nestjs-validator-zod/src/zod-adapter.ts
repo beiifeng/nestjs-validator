@@ -1,21 +1,38 @@
-import type { IAdapter, IModelZ, IProperty, ModelOptions } from "@beiifeng/nestjs-validator";
+import {
+  CONSTANTS,
+  NotMatchError,
+  type IAdapter,
+  type IModelZ,
+  type IProperty,
+  type ModelOptions,
+} from "@beiifeng/nestjs-validator";
 import { Logger } from "@nestjs/common";
 import {
   toJSONSchema,
   ZodArray,
+  ZodBigInt,
+  ZodBoolean,
   ZodCatch,
+  ZodDate,
   ZodDefault,
   ZodEnum,
   ZodExactOptional,
+  ZodISODate,
+  ZodISODateTime,
+  ZodISOTime,
   ZodLazy,
   ZodNonOptional,
   ZodNull,
   ZodNullable,
+  ZodNumber,
   ZodObject,
   ZodOptional,
+  ZodPipe,
   ZodPrefault,
   ZodPromise,
   ZodReadonly,
+  ZodRecord,
+  ZodString,
   ZodSuccess,
   ZodType,
   ZodUndefined,
@@ -49,16 +66,37 @@ function unwrapZod(schema: ZodType): ZodType {
   return current;
 }
 
+const FORMAT_MAP = {
+  guid: "uuid",
+  url: "uri",
+  datetime: "date-time",
+  json_string: "json-string",
+  regex: "", // do not set
+} as const;
+
+const defaultIsDateTime = (schema: ZodType) => {
+  return schema.def.type === "string" && schema.meta()?.[CONSTANTS.JSONLD_TYPE_KEY] === CONSTANTS.XSD_DATETIME;
+};
+const defaultIsBigInt = (schema: ZodType) => {
+  return schema.def.type === "string" && schema.meta()?.[CONSTANTS.JSONLD_TYPE_KEY] === CONSTANTS.XSD_INTEGER;
+};
+
 export type ZodAdapterOptions = {
   keyOfIdentifier?: string;
+  isDateTime?: (schema: ZodType) => boolean;
+  isBigInt?: (schema: ZodType) => boolean;
 };
 
 export class ZodAdapter implements IAdapter<ZodType> {
   readonly name = "Zod";
   #logger = new Logger(ZodAdapter.name);
   #keyOfIdentifier: string;
+  #isDateTime: (schema: ZodType) => boolean;
+  #isBigInt: (schema: ZodType) => boolean;
   constructor(options?: ZodAdapterOptions) {
     this.#keyOfIdentifier = options?.keyOfIdentifier || "$id";
+    this.#isDateTime = options?.isDateTime || defaultIsDateTime;
+    this.#isBigInt = options?.isBigInt || defaultIsBigInt;
   }
 
   isSchema(schema: ZodType): boolean {
@@ -99,30 +137,53 @@ export class ZodAdapter implements IAdapter<ZodType> {
   }
 
   native(schema: ZodType): ReturnType<IAdapter<ZodType>["native"]> {
-    const unwrapped = unwrapZod(schema);
-    switch (unwrapped.def.type) {
-      case "bigint":
-        return BigInt;
-      case "number":
-      case "int":
-        return Number;
-      case "boolean":
-        return Boolean;
-      case "string":
-        return String;
-      case "date":
+    let unwrapped = unwrapZod(schema);
+    if (unwrapped instanceof ZodPipe) {
+      if (unwrapped.out._zod.def.type === "date") {
         return Date;
-      case "array":
-        return Array;
-      case "object":
-      case "record":
-        return Object;
-      case "enum":
-        return typeof (unwrapped as ZodEnum).options[0] === "number" ? Number : String;
-      default:
-        this.#logger.debug(`Unsupported Zod type '${unwrapped.def.type}' for native type mapping.`);
-        return null;
+      }
+      if (unwrapped.out._zod.def.type === "bigint") {
+        return BigInt;
+      }
+      unwrapped = unwrapZod(unwrapped.in as ZodType);
+      if (this.#isDateTime(unwrapped)) {
+        return Date;
+      }
+      if (this.#isBigInt(unwrapped)) {
+        return BigInt;
+      }
     }
+    if (
+      unwrapped instanceof ZodISODateTime ||
+      unwrapped instanceof ZodISODate ||
+      unwrapped instanceof ZodISOTime ||
+      unwrapped instanceof ZodDate
+    ) {
+      return Date;
+    }
+    if (unwrapped instanceof ZodBigInt) {
+      return BigInt;
+    }
+    if (unwrapped instanceof ZodNumber || unwrapped.def.type === "number" || unwrapped.def.type === "int") {
+      return Number;
+    }
+    if (unwrapped instanceof ZodBoolean) {
+      return Boolean;
+    }
+    if (unwrapped instanceof ZodString || unwrapped.def.type === "string" || unwrapped.def.type === "literal") {
+      return String;
+    }
+    if (unwrapped instanceof ZodArray) {
+      return Array;
+    }
+    if (unwrapped instanceof ZodObject || unwrapped instanceof ZodRecord) {
+      return Object;
+    }
+    if (unwrapped instanceof ZodEnum) {
+      return typeof unwrapped.options[0] === "number" ? Number : String;
+    }
+    this.#logger.debug(`Unsupported Zod type '${unwrapped.def.type}' for native type mapping.`);
+    return null;
   }
 
   getIdentifier(schema: ZodType): unknown | null {
@@ -140,7 +201,10 @@ export class ZodAdapter implements IAdapter<ZodType> {
       if (!Object.hasOwn(unwrapped.shape, name)) {
         continue;
       }
-      const _schema = unwrapped.shape[name] as ZodType;
+      let _schema = unwrapped.shape[name] as ZodType;
+      if (_schema instanceof ZodPipe) {
+        _schema = _schema.in as ZodType;
+      }
       properties[name] = {
         name,
         schema: _schema,
@@ -149,6 +213,75 @@ export class ZodAdapter implements IAdapter<ZodType> {
         example: _schema.meta()?.example,
         examples: _schema.meta()?.examples as unknown[] | undefined,
       };
+      const _unwrapped = unwrapZod(_schema);
+      if (_unwrapped instanceof ZodString) {
+        if (_unwrapped.minLength !== null) {
+          properties[name].minLength = _unwrapped.minLength;
+        }
+        if (_unwrapped.maxLength !== null) {
+          properties[name].maxLength = _unwrapped.maxLength;
+        }
+        if (_unwrapped.format) {
+          properties[name].format = FORMAT_MAP[_unwrapped.format] ?? _unwrapped.format;
+        }
+        if (_unwrapped._zod.bag.patterns && _unwrapped._zod.bag.patterns.size > 0) {
+          if (_unwrapped._zod.bag.patterns.size === 1) {
+            properties[name].pattern = _unwrapped._zod.bag.patterns[0].source;
+          } else {
+            properties[name].allOf = [..._unwrapped._zod.bag.patterns].map((p: RegExp) => ({
+              type: "string",
+              pattern: p.source,
+            }));
+          }
+        }
+      } else if (_unwrapped instanceof ZodNumber) {
+        const { exclusiveMinimum, exclusiveMaximum, minimum, maximum } = _unwrapped._zod.bag;
+        if (_unwrapped.format) {
+          properties[name].format = _unwrapped.format;
+        }
+        if (typeof minimum === "number" && typeof exclusiveMinimum === "number") {
+          if (exclusiveMinimum >= minimum) {
+            properties[name].minimum = exclusiveMinimum;
+            properties[name].exclusiveMinimum = true;
+          } else {
+            properties[name].minimum = minimum;
+          }
+        } else if (typeof minimum === "number") {
+          properties[name].minimum = minimum;
+        } else if (typeof exclusiveMinimum === "number") {
+          properties[name].minimum = exclusiveMinimum;
+          properties[name].exclusiveMinimum = true;
+        }
+        if (typeof maximum === "number" && typeof exclusiveMaximum === "number") {
+          if (exclusiveMaximum <= maximum) {
+            properties[name].maximum = exclusiveMaximum;
+            properties[name].exclusiveMaximum = true;
+          } else {
+            properties[name].maximum = maximum;
+          }
+        } else if (typeof maximum === "number") {
+          properties[name].maximum = maximum;
+        } else if (typeof exclusiveMaximum === "number") {
+          properties[name].maximum = exclusiveMaximum;
+          properties[name].exclusiveMaximum = true;
+        }
+      } else if (_unwrapped instanceof ZodArray) {
+        const { minimum, maximum } = _unwrapped._zod.bag;
+        if (typeof minimum === "number") {
+          properties[name].minItems = minimum;
+        }
+        if (typeof maximum === "number") {
+          properties[name].maxItems = maximum;
+        }
+      } else if (_unwrapped instanceof ZodDate) {
+        const { minimum, maximum } = _unwrapped._zod.bag;
+        if (typeof minimum === "object" && minimum instanceof Date && !Number.isNaN(minimum.getTime())) {
+          properties[name].minimum = minimum.getTime();
+        }
+        if (typeof maximum === "object" && maximum instanceof Date && !Number.isNaN(maximum.getTime())) {
+          properties[name].maximum = maximum.getTime();
+        }
+      }
     }
 
     return properties;
@@ -181,11 +314,28 @@ export class ZodAdapter implements IAdapter<ZodType> {
     });
   }
 
-  parse(schema: ZodType, plain: unknown): unknown {
-    return schema.parse(plain);
+  parse<T = unknown>(schema: ZodType, plain: unknown): [NotMatchError, null] | [null, T] {
+    const result = schema.safeParse(plain);
+    if (result.success) {
+      return [null, result.data as T];
+    }
+    const firstError = result.error.issues[0];
+    const error = new NotMatchError(
+      firstError.message,
+      firstError.path.map((p) => (typeof p === "string" ? p : String(p))),
+    );
+    return [error, null];
   }
 
-  check(schema: ZodType, value: unknown): boolean {
-    return schema.safeParse(value).success;
+  check(schema: ZodType, value: unknown): NotMatchError | null {
+    const result = schema.safeParse(value);
+    if (result.success) {
+      return null;
+    }
+    const firstError = result.error.issues[0];
+    return new NotMatchError(
+      firstError.message,
+      firstError.path.map((p) => (typeof p === "string" ? p : String(p))),
+    );
   }
 }

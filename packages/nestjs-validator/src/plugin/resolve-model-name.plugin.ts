@@ -1,6 +1,6 @@
 import type { IPlugin, IPluginCtx, IPluginRt } from "../interface.js";
 
-const PLUGIN_NAME = "Preset:ResolveModelNamePlugin";
+const PLUGIN_NAME = "resolve-model-name-plugin";
 
 export class ResolveModelNamePlugin implements IPlugin {
   static pluginName: string = PLUGIN_NAME;
@@ -13,7 +13,10 @@ export class ResolveModelNamePlugin implements IPlugin {
     this.#definedModels = new Set<string>();
     this.#splitter = splitter ?? "_";
   }
-  apply(_rt: IPluginRt, ctx: IPluginCtx): IPluginCtx {
+  apply(_rt: IPluginRt, ctx?: IPluginCtx): IPluginCtx | undefined {
+    if (!ctx) {
+      return undefined;
+    }
     let { name } = ctx;
     if (this.#definedModels.has(name)) {
       let count = 1;

@@ -25,7 +25,8 @@
   "type": "module",
   "devDependencies": {
     "@nestjs/common": "^11.1.28",
-    "@nestjs/core": "^11.1.28"
+    "@nestjs/core": "^11.1.28",
+    "@types/node": "^24.13.3"
   },
   "peerDependencies": {
     "@nestjs/common": "^11.0.1",

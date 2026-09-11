@@ -1,4 +1,4 @@
-import { Model, ModelZ } from "@beiifeng/nestjs-validator";
+import { CONSTANTS, Model, ModelZ } from "@beiifeng/nestjs-validator";
 import t from "typebox";
 import z from "zod";
 
@@ -27,6 +27,14 @@ const $User = z
       .array($Role)
       .optional()
       .meta({ description: "The roles of the user", example: [{ name: "admin", description: "Administrator role" }] }),
+    createdAt: z.iso
+      .datetime()
+      .meta({
+        description: "The creation date of the user",
+        example: "2024-06-05T12:00:00Z",
+        [CONSTANTS.JSONLD_TYPE_KEY]: CONSTANTS.XSD_DATETIME,
+      })
+      .transform((val) => new Date(val)),
   })
   // Execute `node -e "console.log(`urn:uuid:${crypto.randomUUID()}`)"` in terminal to generate a unique UUID for each model.
   .meta({ $id: `urn:uuid:96a62b19-1bca-4869-b441-8e7a82dcd2cb` });
@@ -48,6 +56,17 @@ const $Order = t.Object(
       { pending: "pending", completed: "completed", cancelled: "cancelled" },
       { description: "The status of the order", example: "pending" },
     ),
+    createdAt: t
+      .Codec(
+        t.String({
+          format: "date-time",
+          description: "The creation date of the order",
+          example: "2024-06-05T12:00:00Z",
+          [CONSTANTS.JSONLD_TYPE_KEY]: CONSTANTS.XSD_DATETIME,
+        }),
+      )
+      .Decode((value) => new Date(value))
+      .Encode((value) => value.toISOString()),
   },
   { $id: "urn:uuid:a1b2c3d4-e5f6-7890-abcd-ef1234567890" },
 );

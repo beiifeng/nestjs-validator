@@ -1,4 +1,5 @@
 import type { Type } from "@nestjs/common";
+import type { NotMatchError } from "./error";
 
 export type ISchema = unknown;
 export type IModelSchema = unknown;
@@ -19,6 +20,18 @@ export interface IProperty<S> {
   description?: string;
   example?: unknown;
   examples?: unknown[] | Record<string, unknown>;
+  minLength?: number; // For string types
+  maxLength?: number; // For string types
+  format?: string; // For string types and number types
+  pattern?: string; // For string types
+  allOf?: unknown[];
+  minimum?: number; // For number types
+  maximum?: number; // For number types
+  exclusiveMinimum?: boolean; // For number types
+  exclusiveMaximum?: boolean; // For number types
+  minItems?: number; // For array types
+  maxItems?: number; // For array types
+  // [key: string]: unknown;
 }
 export interface IAdapter<S> {
   readonly name: string;
@@ -75,6 +88,10 @@ export interface IAdapter<S> {
   /**
    * Get the native JavaScript type that corresponds to the schema.
    *
+   * When the schema is pipe or codec, it will return the `output` type of the pipe or codec.
+   * But some library may not support `output` type inference for pipes or codecs,
+   * in that case, take the type from the `input` and make some conversion.
+   *
    * @example Zod
    * ```js
    * native(z.string());  // returns String
@@ -84,6 +101,9 @@ export interface IAdapter<S> {
    * native(z.bigint());  // returns BigInt
    * native(z.array(z.string())); // returns Array
    * native(z.object({ name: z.string() })); // returns Object
+   * native(z.iso.datetime().transform((val) => new Date(val))); // no output type, returns String
+   * native(z.codec(z.iso.datetime(), z.date(), {encode: (value) => value.toISOString(), decode: (value) => new Date(value)})); // returns Date
+   * native(z.iso.datetime().meta({"@type": "http://www.w3.org/2001/XMLSchema#dateTime"}).transform((val) => new Date(val))); // no output type, returns Date
    *
    * native(z.string().optional());   // returns String
    * native(z.number().nullable());   // returns Number
@@ -134,7 +154,7 @@ export interface IAdapter<S> {
    * This method returns a record of property names to their corresponding Property definitions.
    * If the schema does not represent a model, it returns null.
    */
-  getProperties(schema: S): Record<string, IProperty<S> | null>;
+  getProperties(schema: S): Record<string, IProperty<S>> | null;
 
   /**
    * Get the default value for a schema if it has one.
@@ -159,24 +179,21 @@ export interface IAdapter<S> {
 
   /**
    * Parse a plain object into a value that matches the schema.
-   * This is useful for converting data from external sources (like JSON) into the expected types defined by the schema.
    *
-   * TODO: throw Error
+   * @throws { NotMatchError } If the value does not match the schema, it should throw a `NotMatchError` with details about the mismatch.
    */
-  parse(schema: S, plain: unknown): unknown;
+  parse<T = unknown>(schema: S, plain: unknown): [NotMatchError, null] | [null, T];
 
   /**
-   * Check if a value matches the schema.
-   *
-   * TODO: throw Error
+   * Check if a value matches the schema. Safe mode, does not throw an error, returns a `NotMatchError` if it does not match, otherwise returns null.
    */
-  check(schema: S, value: unknown): boolean;
+  check(schema: S, value: unknown): NotMatchError | null;
 }
 export interface IModelZ<T> {
   readonly $schema: IModelSchema;
+  initialize: (plain: Record<string, unknown>) => IModelZ<T>;
 
   new (): T;
-  new (plain: Partial<T>): T;
 }
 export interface ModelOptions {
   name?: string;
@@ -206,6 +223,5 @@ export interface IPlugin {
   readonly type: PluginType;
   readonly name: string;
 
-  // biome-ignore lint/suspicious/noConfusingVoidType: Void is used to indicate that the plugin does not return a context, which is valid for certain plugin types.
-  apply: (rt: IPluginRt, ctx: IPluginCtx) => IPluginCtx | void;
+  apply: (rt: IPluginRt, ctx?: IPluginCtx) => IPluginCtx | undefined;
 }
