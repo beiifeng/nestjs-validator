@@ -2,7 +2,7 @@
   "name": "@example/swagger",
   "version": "0.0.1",
   "description": "",
-  "author": "",
+  "author": "YiFei Wang <beiifeng@hotmail.com>",
   "private": true,
   "license": "MIT",
   "type": "commonjs",

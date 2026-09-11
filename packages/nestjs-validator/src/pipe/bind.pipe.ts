@@ -56,12 +56,11 @@ function transformValue(plainValue: unknown, metadata: ArgumentMetadata, schema:
 }
 
 function plainToInstance(value: unknown, metaType: MixedType | null, schema: ISchema | undefined, path: string[]) {
-  if (value === null) {
-    return null;
-  }
-
   if (value === undefined && schema) {
     value = getDefaultValue(schema);
+  }
+  if (value === undefined || value === null) {
+    return value;
   }
 
   let realMetaType: MixedType | null = metaType;
