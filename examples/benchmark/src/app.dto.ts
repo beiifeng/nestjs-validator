@@ -48,13 +48,13 @@ export class ZUser extends ModelZ($ZUser) {}
 
 const $TRole = t.Object(
   {
-    code: t.String({ minLength: 1, maxLength: 10, description: "The code of the role", examples: ["ADMIN"] }),
-    name: t.String({ minLength: 1, maxLength: 20, description: "The name of the role", examples: ["Administrators"] }),
+    code: t.String({ minLength: 1, maxLength: 10, description: "The code of the role", example: "ADMIN" }),
+    name: t.String({ minLength: 1, maxLength: 20, description: "The name of the role", example: "Administrators" }),
     description: t.Optional(
       t.String({
         maxLength: 100,
         description: "The description of the role",
-        examples: ["Administrators role for managing system settings."],
+        example: "Administrators role for managing system settings.",
       }),
     ),
   },
@@ -69,26 +69,26 @@ const $TUser = t.Object(
     id: t.String({
       format: "uuid",
       description: "The unique identifier of the user",
-      examples: ["550e8400-e29b-41d4-a716-446655440000"],
+      example: "550e8400-e29b-41d4-a716-446655440000",
     }),
     username: t.String({
       minLength: 1,
       maxLength: 20,
       description: "The username of the user",
-      examples: ["john_doe"],
+      example: "john_doe",
     }),
-    gender: t.Enum(["male", "female", "other"], { description: "The gender of the user", examples: ["male"] }),
-    age: t.Number({ minimum: 0, maximum: 150, description: "The age of the user", examples: [30] }),
-    email: t.String({ format: "email", description: "The email of the user", examples: ["john_doe@example.com"] }),
+    gender: t.Enum(["male", "female", "other"], { description: "The gender of the user", example: "male" }),
+    age: t.Number({ minimum: 0, maximum: 150, description: "The age of the user", example: 30 }),
+    email: t.String({ format: "email", description: "The email of the user", example: "john_doe@example.com" }),
     roles: t.Optional(
-      t.Array($TRole, { description: "The roles of the user", examples: [{ code: "ADMIN", name: "Administrators" }] }),
+      t.Array($TRole, { description: "The roles of the user", example: [{ code: "ADMIN", name: "Administrators" }] }),
     ),
     createdAt: t
       .Codec(
         t.String({
           format: "date-time",
           description: "The creation date of the user",
-          examples: ["2024-06-05T12:00:00Z"],
+          example: "2024-06-05T12:00:00Z",
           [CONSTANTS.JSONLD_TYPE_KEY]: CONSTANTS.XSD_DATETIME,
         }),
       )
