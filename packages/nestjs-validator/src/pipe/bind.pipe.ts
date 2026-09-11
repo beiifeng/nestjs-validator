@@ -24,7 +24,6 @@ function createBindPipe(): Bind {
   InnerPipe.transform = innerTransform;
   return InnerPipe;
 }
-
 export const Bind = createBindPipe();
 
 const logger = new Logger("NestjsValidator");
@@ -44,21 +43,21 @@ function transformValue(plainValue: unknown, metadata: ArgumentMetadata, schema:
   const { metatype, type, data = "" } = metadata;
   schema = schema || getSchema(metatype);
   const path = data ? [type, data] : [type];
-  const instance = plainToInstance(plainValue, metatype || null, schema, path);
   if (schema) {
-    const error = check(schema, instance);
+    const error = check(schema, plainValue);
     if (error) {
       error.path = path.concat(error.path);
       logger.warn(`The value for variable '${error.path.join(".")}' is invalid, message: ${error.message}.`);
       throw error;
     }
   }
+  const instance = plainToInstance(plainValue, metatype || null, schema, path);
   return instance;
 }
 
 function plainToInstance(value: unknown, metaType: MixedType | null, schema: ISchema | undefined, path: string[]) {
   if (value === null) {
-    return value;
+    return null;
   }
 
   if (value === undefined && schema) {
@@ -74,8 +73,7 @@ function plainToInstance(value: unknown, metaType: MixedType | null, schema: ISc
     if (isArray(schema)) {
       realMetaType = Array;
     } else {
-      const _schema = unwrap(schema);
-      realMetaType = getType(_schema);
+      realMetaType = getType(unwrap(schema));
     }
   }
   if (realMetaType === Object) {
@@ -85,7 +83,7 @@ function plainToInstance(value: unknown, metaType: MixedType | null, schema: ISc
       );
       return undefined;
     }
-    return createInstance(value, Object, schema, path);
+    return createObject(value, Object, schema, path);
   }
   if (realMetaType === Array) {
     const _value = Array.isArray(value) ? value : [value];
@@ -123,9 +121,14 @@ function plainToInstance(value: unknown, metaType: MixedType | null, schema: ISc
   }
   if (realMetaType === BigInt) {
     try {
-      return BigInt(value as string | number);
+      if (typeof value === "string" && value.at(-1) === "n") {
+        return BigInt(value.slice(0, -1));
+      }
+      return BigInt(value as number | bigint);
     } catch (_error) {
-      logger.warn(`The value for variable '${path.join(".")}' cannot be converted to BigInt, please check the schema.`);
+      logger.warn(
+        `The value for variable '${path.join(".")}' cannot be converted to BigInt, please input a valid number or string.`,
+      );
       return undefined;
     }
   }
@@ -133,10 +136,10 @@ function plainToInstance(value: unknown, metaType: MixedType | null, schema: ISc
   if (realMetaType && value instanceof realMetaType) {
     return value;
   }
-  return createInstance(value, realMetaType as Type, schema, path);
+  return createObject(value, realMetaType as Type, schema, path);
 }
 
-function createInstance<T extends object>(
+function createObject<T extends object>(
   value: unknown,
   metaType: Type<T> | undefined,
   schema: ISchema | undefined,
@@ -166,11 +169,7 @@ function createInstance<T extends object>(
     return instance;
   }
   Object.values(properties).forEach((property) => {
-    Reflect.set(
-      instance,
-      property.name,
-      plainToInstance(value[property.name], null, property.schema, path.concat(property.name)),
-    );
+    instance[property.name] = plainToInstance(value[property.name], null, property.schema, path.concat(property.name));
   });
   return instance;
 }

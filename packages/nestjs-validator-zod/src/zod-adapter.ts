@@ -1,4 +1,5 @@
 import {
+  CONSTANTS,
   NotMatchError,
   type IAdapter,
   type IModelZ,
@@ -9,11 +10,16 @@ import { Logger } from "@nestjs/common";
 import {
   toJSONSchema,
   ZodArray,
+  ZodBigInt,
+  ZodBoolean,
   ZodCatch,
   ZodDate,
   ZodDefault,
   ZodEnum,
   ZodExactOptional,
+  ZodISODate,
+  ZodISODateTime,
+  ZodISOTime,
   ZodLazy,
   ZodNonOptional,
   ZodNull,
@@ -21,9 +27,11 @@ import {
   ZodNumber,
   ZodObject,
   ZodOptional,
+  ZodPipe,
   ZodPrefault,
   ZodPromise,
   ZodReadonly,
+  ZodRecord,
   ZodString,
   ZodSuccess,
   ZodType,
@@ -66,16 +74,29 @@ const FORMAT_MAP = {
   regex: "", // do not set
 } as const;
 
+const defaultIsDateTime = (schema: ZodType) => {
+  return schema.def.type === "string" && schema.meta()?.[CONSTANTS.JSONLD_TYPE_KEY] === CONSTANTS.XSD_DATETIME;
+};
+const defaultIsBigInt = (schema: ZodType) => {
+  return schema.def.type === "string" && schema.meta()?.[CONSTANTS.JSONLD_TYPE_KEY] === CONSTANTS.XSD_INTEGER;
+};
+
 export type ZodAdapterOptions = {
   keyOfIdentifier?: string;
+  isDateTime?: (schema: ZodType) => boolean;
+  isBigInt?: (schema: ZodType) => boolean;
 };
 
 export class ZodAdapter implements IAdapter<ZodType> {
   readonly name = "Zod";
   #logger = new Logger(ZodAdapter.name);
   #keyOfIdentifier: string;
+  #isDateTime: (schema: ZodType) => boolean;
+  #isBigInt: (schema: ZodType) => boolean;
   constructor(options?: ZodAdapterOptions) {
     this.#keyOfIdentifier = options?.keyOfIdentifier || "$id";
+    this.#isDateTime = options?.isDateTime || defaultIsDateTime;
+    this.#isBigInt = options?.isBigInt || defaultIsBigInt;
   }
 
   isSchema(schema: ZodType): boolean {
@@ -116,30 +137,53 @@ export class ZodAdapter implements IAdapter<ZodType> {
   }
 
   native(schema: ZodType): ReturnType<IAdapter<ZodType>["native"]> {
-    const unwrapped = unwrapZod(schema);
-    switch (unwrapped.def.type) {
-      case "bigint":
-        return BigInt;
-      case "number":
-      case "int":
-        return Number;
-      case "boolean":
-        return Boolean;
-      case "string":
-        return String;
-      case "date":
+    let unwrapped = unwrapZod(schema);
+    if (unwrapped instanceof ZodPipe) {
+      if (unwrapped.out._zod.def.type === "date") {
         return Date;
-      case "array":
-        return Array;
-      case "object":
-      case "record":
-        return Object;
-      case "enum":
-        return typeof (unwrapped as ZodEnum).options[0] === "number" ? Number : String;
-      default:
-        this.#logger.debug(`Unsupported Zod type '${unwrapped.def.type}' for native type mapping.`);
-        return null;
+      }
+      if (unwrapped.out._zod.def.type === "bigint") {
+        return BigInt;
+      }
+      unwrapped = unwrapZod(unwrapped.in as ZodType);
+      if (this.#isDateTime(unwrapped)) {
+        return Date;
+      }
+      if (this.#isBigInt(unwrapped)) {
+        return BigInt;
+      }
     }
+    if (
+      unwrapped instanceof ZodISODateTime ||
+      unwrapped instanceof ZodISODate ||
+      unwrapped instanceof ZodISOTime ||
+      unwrapped instanceof ZodDate
+    ) {
+      return Date;
+    }
+    if (unwrapped instanceof ZodBigInt) {
+      return BigInt;
+    }
+    if (unwrapped instanceof ZodNumber || unwrapped.def.type === "number" || unwrapped.def.type === "int") {
+      return Number;
+    }
+    if (unwrapped instanceof ZodBoolean) {
+      return Boolean;
+    }
+    if (unwrapped instanceof ZodString || unwrapped.def.type === "string" || unwrapped.def.type === "literal") {
+      return String;
+    }
+    if (unwrapped instanceof ZodArray) {
+      return Array;
+    }
+    if (unwrapped instanceof ZodObject || unwrapped instanceof ZodRecord) {
+      return Object;
+    }
+    if (unwrapped instanceof ZodEnum) {
+      return typeof unwrapped.options[0] === "number" ? Number : String;
+    }
+    this.#logger.debug(`Unsupported Zod type '${unwrapped.def.type}' for native type mapping.`);
+    return null;
   }
 
   getIdentifier(schema: ZodType): unknown | null {
@@ -157,7 +201,10 @@ export class ZodAdapter implements IAdapter<ZodType> {
       if (!Object.hasOwn(unwrapped.shape, name)) {
         continue;
       }
-      const _schema = unwrapped.shape[name] as ZodType;
+      let _schema = unwrapped.shape[name] as ZodType;
+      if (_schema instanceof ZodPipe) {
+        _schema = _schema.in as ZodType;
+      }
       properties[name] = {
         name,
         schema: _schema,

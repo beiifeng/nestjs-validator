@@ -1,4 +1,5 @@
 import {
+  CONSTANTS,
   NotMatchError,
   validator,
   type IAdapter,
@@ -11,6 +12,7 @@ import {
   IsArray,
   IsBigInt,
   IsBoolean,
+  IsCodec,
   IsEnum,
   IsInteger,
   IsNull,
@@ -21,7 +23,7 @@ import {
   IsUndefined,
   IsUnion,
   NonNullable,
-  type Static,
+  type StaticDecode,
   type TArrayOptions,
   type TNumberOptions,
   type TObject,
@@ -36,7 +38,7 @@ import { TypeBoxSchemaPlugin } from "./plugin.js";
 import { validators } from "./store.js";
 
 declare module "@beiifeng/nestjs-validator" {
-  export function ModelZ<T extends TProperties>(schema: TObject<T>): IModelZ<Static<typeof schema>>;
+  export function ModelZ<T extends TProperties>(schema: TObject<T>): IModelZ<StaticDecode<typeof schema>>;
   export function Model<T extends TProperties>(schema: TObject<T>): ClassDecorator;
   export function Model<T extends TProperties>(schema: TObject<T>, options: ModelOptions): ClassDecorator;
 }
@@ -73,17 +75,30 @@ declare module "typebox" {
   }
 }
 
+const defaultIsDateTime = (schema: TSchema) => {
+  return IsString(schema) && schema[CONSTANTS.JSONLD_TYPE_KEY] === CONSTANTS.XSD_DATETIME;
+};
+const defaultIsBigInt = (schema: TSchema) => {
+  return IsString(schema) && schema[CONSTANTS.JSONLD_TYPE_KEY] === CONSTANTS.XSD_INTEGER;
+};
+
 export type TypeBoxAdapterOptions = {
   keyOfIdentifier?: string;
+  isDateTime?: (schema: TSchema) => boolean;
+  isBigInt?: (schema: TSchema) => boolean;
 };
 
 export class TypeBoxAdapter implements IAdapter<TSchema> {
   readonly name = "TypeBox";
   #keyOfIdentifier: string;
   #logger = new Logger(TypeBoxAdapter.name);
+  #isDateTime: (schema: TSchema) => boolean;
+  #isBigInt: (schema: TSchema) => boolean;
   constructor(options?: TypeBoxAdapterOptions) {
     validator.addPlugin(new TypeBoxSchemaPlugin());
     this.#keyOfIdentifier = options?.keyOfIdentifier || "$id";
+    this.#isDateTime = options?.isDateTime || defaultIsDateTime;
+    this.#isBigInt = options?.isBigInt || defaultIsBigInt;
   }
 
   isSchema(schema: TSchema): boolean {
@@ -119,6 +134,14 @@ export class TypeBoxAdapter implements IAdapter<TSchema> {
   }
 
   native(schema: TSchema): ReturnType<IAdapter<TSchema>["native"]> {
+    if (IsCodec(schema)) {
+      if (this.#isDateTime(schema)) {
+        return Date;
+      }
+      if (this.#isBigInt(schema)) {
+        return BigInt;
+      }
+    }
     if (IsBigInt(schema)) {
       return BigInt;
     }
@@ -129,9 +152,6 @@ export class TypeBoxAdapter implements IAdapter<TSchema> {
       return Boolean;
     }
     if (IsString(schema)) {
-      // if (schema.format === "date-time" || schema.format === "date" || schema.format === "time") {
-      //   return Date;
-      // }
       return String;
     }
     if (IsArray(schema)) {

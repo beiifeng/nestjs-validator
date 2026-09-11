@@ -88,6 +88,10 @@ export interface IAdapter<S> {
   /**
    * Get the native JavaScript type that corresponds to the schema.
    *
+   * When the schema is pipe or codec, it will return the `output` type of the pipe or codec.
+   * But some library may not support `output` type inference for pipes or codecs,
+   * in that case, take the type from the `input` and make some conversion.
+   *
    * @example Zod
    * ```js
    * native(z.string());  // returns String
@@ -97,6 +101,9 @@ export interface IAdapter<S> {
    * native(z.bigint());  // returns BigInt
    * native(z.array(z.string())); // returns Array
    * native(z.object({ name: z.string() })); // returns Object
+   * native(z.iso.datetime().transform((val) => new Date(val))); // no output type, returns String
+   * native(z.codec(z.iso.datetime(), z.date(), {encode: (value) => value.toISOString(), decode: (value) => new Date(value)})); // returns Date
+   * native(z.iso.datetime().meta({"@type": "http://www.w3.org/2001/XMLSchema#dateTime"}).transform((val) => new Date(val))); // no output type, returns Date
    *
    * native(z.string().optional());   // returns String
    * native(z.number().nullable());   // returns Number
