@@ -94,14 +94,14 @@ const $TUser = t.Object(
   { $id: "urn:uuid:8f3b1c2a-1c4e-4b6a-9f3a-2b1c4e6a9f3a" },
 );
 
-const Validator = Schema.Compile($TUser);
+const validator = Schema.Compile($TUser);
 
 function runZod(input) {
   return $ZUser.parse(input);
 }
 
 function runTypeBoxWithCompile(input) {
-  return Validator.Parse(input);
+  return validator.Parse(input);
 }
 
 function run() {

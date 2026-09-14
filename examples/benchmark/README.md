@@ -1,5 +1,8 @@
 # Benchmark
 
+
+## E2E
+
 ``` powershell
 pnpm run build
 pnpm --filter "@example/benchmark" build
@@ -24,4 +27,11 @@ pnpm dlx autocannon -c 50 -d 30 -m POST -H "content-type: application/json" -b $
 ``` powershell
 Invoke-RestMethod -Uri "http://localhost:3000/app/typebox" -Method POST -ContentType "application/json" -Body $body
 Invoke-RestMethod -Uri "http://localhost:3000/app/zod" -Method POST -ContentType "application/json" -Body $body
+```
+
+## Unit
+
+``` powershell
+cd examples/benchmark/
+node ./units/parse.mjs
 ```
