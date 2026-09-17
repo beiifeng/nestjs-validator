@@ -66,6 +66,34 @@ function unwrapZod(schema: ZodType): ZodType {
   return current;
 }
 
+function isOptionalZod(schema: ZodType): boolean {
+  while ("unwrap" in schema) {
+    if (schema instanceof ZodOptional || schema instanceof ZodExactOptional) {
+      return true;
+    }
+    if ("unwrap" in schema && typeof schema.unwrap === "function") {
+      schema = schema.unwrap() as ZodType;
+    } else {
+      break;
+    }
+  }
+  return false;
+}
+
+function defaultZod(schema: ZodType): unknown {
+  while ("unwrap" in schema) {
+    if (schema instanceof ZodDefault) {
+      return schema.def.defaultValue;
+    }
+    if ("unwrap" in schema && typeof schema.unwrap === "function") {
+      schema = schema.unwrap() as ZodType;
+    } else {
+      break;
+    }
+  }
+  return undefined;
+}
+
 const FORMAT_MAP = {
   guid: "uuid",
   url: "uri",
@@ -208,7 +236,7 @@ export class ZodAdapter implements IAdapter<ZodType> {
       properties[name] = {
         name,
         schema: _schema,
-        required: !_schema.safeParse(undefined).success,
+        required: !isOptionalZod(_schema),
         description: _schema.meta()?.description || _schema.description,
         example: _schema.meta()?.example,
         examples: _schema.meta()?.examples as unknown[] | undefined,
@@ -288,7 +316,7 @@ export class ZodAdapter implements IAdapter<ZodType> {
   }
 
   getDefaultValue(schema: ZodType): unknown | undefined {
-    return schema.safeParse(undefined).data;
+    return defaultZod(schema);
   }
 
   getEnumValues(schema: ZodType): unknown[] | null {
