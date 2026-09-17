@@ -44,8 +44,23 @@ export function getIdentifier(schema: ISchema): ReturnType<IAdapter<ISchema>["ge
   return getAdapter(schema).getIdentifier(schema);
 }
 
+const propertiesCache = new Map<ISchema, Record<string, IProperty<ISchema>> | null>();
+const propertiesOnlySchemaCache = new Map<ISchema, Record<string, IProperty<ISchema>> | null>();
 export function getProperties(schema: ISchema, onlySchema?: boolean): Record<string, IProperty<ISchema>> | null {
-  return getAdapter(schema).getProperties(schema, onlySchema);
+  if (onlySchema) {
+    let cached = propertiesOnlySchemaCache.get(schema);
+    if (cached === undefined) {
+      cached = getAdapter(schema).getProperties(schema, onlySchema);
+      propertiesOnlySchemaCache.set(schema, cached);
+    }
+    return cached;
+  }
+  let cached = propertiesCache.get(schema);
+  if (cached === undefined) {
+    cached = getAdapter(schema).getProperties(schema, onlySchema);
+    propertiesCache.set(schema, cached);
+  }
+  return cached;
 }
 
 export function getDefaultValue(schema: ISchema): ReturnType<IAdapter<ISchema>["getDefaultValue"]> {
@@ -56,8 +71,14 @@ export function getJSONSchema(schema: ISchema): ReturnType<IAdapter<ISchema>["ge
   return getAdapter(schema).getJSONSchema(schema);
 }
 
+const nativeCache = new Map<ISchema, ReturnType<IAdapter<ISchema>["native"]> | null>();
 export function native(schema: ISchema): ReturnType<IAdapter<ISchema>["native"]> {
-  return getAdapter(schema).native(schema);
+  let cached = nativeCache.get(schema);
+  if (cached === undefined) {
+    cached = getAdapter(schema).native(schema);
+    nativeCache.set(schema, cached);
+  }
+  return cached;
 }
 
 export function isNull(schema: ISchema): ReturnType<IAdapter<ISchema>["isNull"]> {
