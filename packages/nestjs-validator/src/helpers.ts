@@ -44,8 +44,8 @@ export function getIdentifier(schema: ISchema): ReturnType<IAdapter<ISchema>["ge
   return getAdapter(schema).getIdentifier(schema);
 }
 
-export function getProperties(schema: ISchema): Record<string, IProperty<ISchema>> | null {
-  return getAdapter(schema).getProperties(schema);
+export function getProperties(schema: ISchema, onlySchema?: boolean): Record<string, IProperty<ISchema>> | null {
+  return getAdapter(schema).getProperties(schema, onlySchema);
 }
 
 export function getDefaultValue(schema: ISchema): ReturnType<IAdapter<ISchema>["getDefaultValue"]> {

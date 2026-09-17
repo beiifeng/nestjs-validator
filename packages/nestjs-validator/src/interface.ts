@@ -154,7 +154,7 @@ export interface IAdapter<S> {
    * This method returns a record of property names to their corresponding Property definitions.
    * If the schema does not represent a model, it returns null.
    */
-  getProperties(schema: S): Record<string, IProperty<S>> | null;
+  getProperties(schema: S, onlySchema?: boolean): Record<string, IProperty<S>> | null;
 
   /**
    * Get the default value for a schema if it has one.

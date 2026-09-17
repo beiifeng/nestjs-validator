@@ -171,7 +171,7 @@ export class TypeBoxAdapter implements IAdapter<TSchema> {
     return schema[this.#keyOfIdentifier] ?? schema;
   }
 
-  getProperties(schema: TSchema): ReturnType<IAdapter<TSchema>["getProperties"]> {
+  getProperties(schema: TSchema, onlySchema?: boolean): ReturnType<IAdapter<TSchema>["getProperties"]> {
     if (!IsObject(schema)) {
       return null;
     }
@@ -181,11 +181,14 @@ export class TypeBoxAdapter implements IAdapter<TSchema> {
       properties[name] = {
         name,
         schema: _schema,
-        required: Boolean(schema.required?.includes(name)),
-        description: (_schema as TSchemaOptions).description,
-        example: (_schema as TSchemaOptions).example,
-        examples: (_schema as TSchemaOptions).examples as unknown[] | undefined,
       };
+      if (onlySchema) {
+        return;
+      }
+      properties[name].required = Boolean(schema.required?.includes(name));
+      properties[name].description = (_schema as TSchemaOptions).description;
+      properties[name].example = (_schema as TSchemaOptions).example;
+      properties[name].examples = (_schema as TSchemaOptions).examples as unknown[] | undefined;
       if (IsString(_schema)) {
         if (typeof _schema.minLength === "number") {
           properties[name].minLength = _schema.minLength;

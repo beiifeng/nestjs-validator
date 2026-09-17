@@ -218,7 +218,7 @@ export class ZodAdapter implements IAdapter<ZodType> {
     return schema.meta()?.[this.#keyOfIdentifier] ?? schema;
   }
 
-  getProperties(schema: ZodType): ReturnType<IAdapter<ZodType>["getProperties"]> {
+  getProperties(schema: ZodType, onlySchema?: boolean): ReturnType<IAdapter<ZodType>["getProperties"]> {
     const unwrapped = unwrapZod(schema);
     if (!(unwrapped instanceof ZodObject)) {
       return null;
@@ -236,11 +236,14 @@ export class ZodAdapter implements IAdapter<ZodType> {
       properties[name] = {
         name,
         schema: _schema,
-        required: !isOptionalZod(_schema),
-        description: _schema.meta()?.description || _schema.description,
-        example: _schema.meta()?.example,
-        examples: _schema.meta()?.examples as unknown[] | undefined,
       };
+      if (onlySchema) {
+        continue;
+      }
+      properties[name].required = !isOptionalZod(_schema);
+      properties[name].description = _schema.meta()?.description || _schema.description;
+      properties[name].example = _schema.meta()?.example;
+      properties[name].examples = _schema.meta()?.examples as unknown[] | undefined;
       const _unwrapped = unwrapZod(_schema);
       if (_unwrapped instanceof ZodString) {
         if (_unwrapped.minLength !== null) {

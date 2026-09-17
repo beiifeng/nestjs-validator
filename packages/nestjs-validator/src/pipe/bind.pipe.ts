@@ -154,7 +154,7 @@ function createObject<T extends object>(
   if (typeof value !== "object") {
     return instance;
   }
-  const properties = getProperties(schema as IModelSchema);
+  const properties = getProperties(schema as IModelSchema, true);
   if (!properties) {
     return instance;
   }
