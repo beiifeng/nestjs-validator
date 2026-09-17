@@ -1,8 +1,9 @@
 import { CONSTANTS, Model, ModelZ } from "@beiifeng/nestjs-validator";
 import t from "typebox";
+import Schema from "typebox/schema";
 import z from "zod";
 
-const $ZRole = z
+export const $ZRole = z
   .object({
     code: z.string().min(1).max(10).meta({ description: "The code of the role", example: "ADMIN" }),
     name: z.string().min(1).max(20).meta({ description: "The name of the role", example: "Administrators" }),
@@ -16,7 +17,7 @@ const $ZRole = z
 @Model($ZRole)
 export class ZRole extends ModelZ($ZRole) {}
 
-const $ZUser = z
+export const $ZUser = z
   .object({
     id: z
       .uuid()
@@ -46,7 +47,7 @@ const $ZUser = z
 @Model($ZUser)
 export class ZUser extends ModelZ($ZUser) {}
 
-const $TRole = t.Object(
+export const $TRole = t.Object(
   {
     code: t.String({ minLength: 1, maxLength: 10, description: "The code of the role", example: "ADMIN" }),
     name: t.String({ minLength: 1, maxLength: 20, description: "The name of the role", example: "Administrators" }),
@@ -60,11 +61,12 @@ const $TRole = t.Object(
   },
   { $id: "urn:uuid:a3a89bea-99de-439a-9891-6c510eedb919" },
 );
+export const $tRoleValidator = Schema.Compile($TRole);
 
 @Model($TRole)
 export class TRole extends ModelZ($TRole) {}
 
-const $TUser = t.Object(
+export const $TUser = t.Object(
   {
     id: t.String({
       format: "uuid",
@@ -97,6 +99,7 @@ const $TUser = t.Object(
   },
   { $id: "urn:uuid:8f3b1c2a-1c4e-4b6a-9f3a-2b1c4e6a9f3a" },
 );
+export const $tUserValidator = Schema.Compile($TUser);
 
 @Model($TUser)
 export class TUser extends ModelZ($TUser) {}
