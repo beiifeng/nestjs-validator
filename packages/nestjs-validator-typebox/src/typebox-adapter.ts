@@ -219,12 +219,8 @@ export class TypeBoxAdapter implements IAdapter<TSchema> {
     return properties;
   }
 
-  getDefaultValue(schema: TSchema): unknown | undefined {
-    try {
-      return validators.getOrInsert(schema).Parse(undefined);
-    } catch {
-      return undefined;
-    }
+  getDefaultValue(_schema: TSchema): unknown | undefined {
+    return undefined;
   }
 
   getEnumValues(schema: TSchema): unknown[] | null {
