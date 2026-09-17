@@ -4,6 +4,6 @@
   "dictionaryDefinitions": [],
   "dictionaries": [],
   "words": [],
-  "ignoreWords": ["beiifeng", "metatype", "prefault", "typebox"],
+  "ignoreWords": ["beiifeng", "clazz", "metatype", "prefault", "typebox"],
   "import": []
 }
